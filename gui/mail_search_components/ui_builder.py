@@ -25,7 +25,7 @@ class MailSearchUI:
             font=("Arial", 12),
             foreground="blue"
         )
-        title_label.grid(row=0, column=0, columnspan=3, pady=10)
+        title_label.grid(row=0, column=0, columnspan=5, pady=10)
         
         # Search criteria fields
         ttk.Label(self.parent, text="Folder przeszukiwania (z podfolderami):").grid(row=1, column=0, sticky="e", padx=5, pady=5)
@@ -108,7 +108,7 @@ class MailSearchUI:
         
         # Create frame for period buttons
         period_frame = ttk.Frame(self.parent)
-        period_frame.grid(row=10, column=1, columnspan=2, sticky="w", padx=5, pady=(15, 5))
+        period_frame.grid(row=10, column=1, columnspan=4, sticky="w", padx=5, pady=(15, 5))
         
         # Period selection buttons
         periods = [
@@ -132,7 +132,7 @@ class MailSearchUI:
     def create_control_widgets(self, search_callback):
         """Create search button and status widgets"""
         search_frame = ttk.Frame(self.parent)
-        search_frame.grid(row=11, column=0, columnspan=3, pady=20)
+        search_frame.grid(row=11, column=0, columnspan=5, pady=20)
         
         search_button = ttk.Button(search_frame, text="Rozpocznij wyszukiwanie", command=search_callback)
         search_button.pack(side="left", padx=5)
@@ -157,13 +157,15 @@ class MailSearchUI:
     def create_results_widget(self):
         """Create results area widget - now returns a frame for the new ResultsDisplay"""
         results_frame = ttk.Frame(self.parent)
-        results_frame.grid(row=12, column=0, columnspan=3, padx=10, pady=10, sticky="nsew")
+        results_frame.grid(row=12, column=0, columnspan=5, padx=10, pady=10, sticky="nsew")
         
         # Configure grid weights for the parent to allow dynamic resizing
         self.parent.grid_rowconfigure(12, weight=1)  # Results row gets all extra space
         self.parent.grid_columnconfigure(0, weight=1)
         self.parent.grid_columnconfigure(1, weight=1)
         self.parent.grid_columnconfigure(2, weight=1)
+        self.parent.grid_columnconfigure(3, weight=1)
+        self.parent.grid_columnconfigure(4, weight=1)
         
         return results_frame
     
@@ -174,11 +176,11 @@ class MailSearchUI:
             
         # Create main container frame
         container_frame = ttk.Frame(self.parent)
-        container_frame.grid(row=2, column=0, columnspan=3, padx=5, pady=5, sticky="ew")
+        container_frame.grid(row=2, column=0, columnspan=5, padx=5, pady=5, sticky="ew")
         
         # Create header frame with title and hide/show button
         header_frame = ttk.Frame(container_frame)
-        header_frame.grid(row=0, column=0, columnspan=3, sticky="ew", pady=(0, 5))
+        header_frame.grid(row=0, column=0, columnspan=5, sticky="ew", pady=(0, 5))
         
         # Title label
         title_label = ttk.Label(header_frame, text="Wyklucz te foldery:", font=("Arial", 10, "bold"))
@@ -212,7 +214,7 @@ class MailSearchUI:
         
         # Create frame for checkboxes
         checkboxes_frame = ttk.Frame(container_frame, relief="sunken", borderwidth=1)
-        checkboxes_frame.grid(row=1, column=0, columnspan=3, padx=5, pady=5, sticky="ew")
+        checkboxes_frame.grid(row=1, column=0, columnspan=5, padx=5, pady=5, sticky="ew")
         
         # Initially hide or show based on is_visible parameter
         if not is_visible:
