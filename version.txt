@@ -1,0 +1,3 @@
+Program: Ksieg-OCR
+Commit: f69b594
+PR: 12
