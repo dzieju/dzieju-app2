@@ -1,3 +1,3 @@
 Program: Ksieg-OCR
-Commit: f69b594
-PR: 12
+Commit: 6b81f0c95ca3e06d7bcb46677ccdd97ac073d031
+PR: 4
