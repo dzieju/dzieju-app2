@@ -1,0 +1,9 @@
+exchangelib
+IMAPClient
+pdfplumber
+pdfminer.six
+tkcalendar
+pdf2image
+pillow
+pytesseract
+opencv-python
