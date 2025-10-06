@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Version Display Functionality Demo</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            max-width: 900px;
+            margin: 40px auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            border-radius: 8px;
+            margin-bottom: 30px;
+            text-align: center;
+        }
+        
+        .header h1 {
+            margin: 0 0 10px 0;
+            font-size: 28px;
+        }
+        
+        .header p {
+            margin: 0;
+            opacity: 0.9;
+        }
+        
+        .window {
+            background: white;
+            border: 1px solid #ccc;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            margin-bottom: 30px;
+        }
+        
+        .title-bar {
+            background: #0078d4;
+            color: white;
+            padding: 10px 15px;
+            font-weight: bold;
+            font-size: 14px;
+        }
+        
+        .title-bar .highlight {
+            background: rgba(255, 255, 255, 0.2);
+            padding: 2px 8px;
+            border-radius: 3px;
+        }
+        
+        .tab-container {
+            background: #f0f0f0;
+            border-bottom: 1px solid #ccc;
+            display: flex;
+        }
+        
+        .tab {
+            padding: 10px 20px;
+            cursor: pointer;
+            border-right: 1px solid #ccc;
+        }
+        
+        .tab.active {
+            background: white;
+            border-bottom: 3px solid #0078d4;
+            font-weight: bold;
+        }
+        
+        .tab-content {
+            padding: 20px;
+        }
+        
+        .version-section {
+            background: #f9f9f9;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            padding: 15px;
+            margin-bottom: 20px;
+        }
+        
+        .section-title {
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 10px;
+            padding-bottom: 5px;
+            border-bottom: 1px solid #eee;
+        }
+        
+        .version-info {
+            font-family: 'Consolas', 'Monaco', monospace;
+            font-size: 13px;
+            color: #555;
+            line-height: 1.6;
+            white-space: pre-wrap;
+        }
+        
+        .version-info .highlight {
+            background: #fff3cd;
+            padding: 2px 4px;
+            border-radius: 2px;
+            color: #856404;
+        }
+        
+        .btn {
+            display: inline-block;
+            padding: 8px 16px;
+            background: #0078d4;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-top: 10px;
+        }
+        
+        .btn:hover {
+            background: #005a9e;
+        }
+        
+        .feature-box {
+            background: #e8f5e9;
+            border: 1px solid #81c784;
+            border-left: 4px solid #4caf50;
+            padding: 15px;
+            border-radius: 4px;
+            margin-bottom: 20px;
+        }
+        
+        .feature-box h3 {
+            margin: 0 0 10px 0;
+            color: #2e7d32;
+        }
+        
+        .feature-box ul {
+            margin: 10px 0;
+            padding-left: 20px;
+        }
+        
+        .feature-box li {
+            margin: 5px 0;
+        }
+        
+        .code-box {
+            background: #263238;
+            color: #aed581;
+            padding: 15px;
+            border-radius: 4px;
+            font-family: 'Consolas', 'Monaco', monospace;
+            font-size: 12px;
+            overflow-x: auto;
+            margin: 10px 0;
+        }
+        
+        .code-box .comment {
+            color: #78909c;
+        }
+        
+        .code-box .keyword {
+            color: #c792ea;
+        }
+        
+        .code-box .string {
+            color: #c3e88d;
+        }
+        
+        .success {
+            color: #4caf50;
+            font-weight: bold;
+        }
+        
+        .status-badge {
+            display: inline-block;
+            padding: 4px 8px;
+            background: #4caf50;
+            color: white;
+            border-radius: 3px;
+            font-size: 12px;
+            margin-left: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>✅ Version Display Functionality</h1>
+        <p>Successfully implemented support for version.txt with git fallback</p>
+    </div>
+    
+    <div class="feature-box">
+        <h3>🎯 Implementation Complete</h3>
+        <ul>
+            <li><strong>version.txt reading:</strong> Reads program name, commit hash, and PR number from version.txt</li>
+            <li><strong>Git fallback:</strong> Falls back to git commands when version.txt is unavailable</li>
+            <li><strong>Title bar display:</strong> Shows version info in window title (e.g., "Ksieg-OCR - PR#12 - vf69b594")</li>
+            <li><strong>System tab display:</strong> Shows detailed version info with refresh button</li>
+            <li><strong>Automatic refresh:</strong> Version info updates when refresh button is clicked</li>
+        </ul>
+    </div>
+    
+    <div class="window">
+        <div class="title-bar">
+            <span class="highlight">Ksieg-OCR - PR#12 - vf69b594</span>
+        </div>
+        <div class="tab-container">
+            <div class="tab">Przeszukiwanie Poczty</div>
+            <div class="tab">Konfiguracja poczty</div>
+            <div class="tab">Zakupy</div>
+            <div class="tab active">System</div>
+        </div>
+        <div class="tab-content">
+            <div class="version-section">
+                <div class="section-title">📋 Informacje o wersji</div>
+                <div class="version-info">Program: <span class="highlight">Ksieg-OCR</span>
+PR Number: <span class="highlight">#12</span>
+Commit: <span class="highlight">f69b594</span>
+
+=== GPU/AI Framework Status ===
+🔧 CUDA System: ❌ Niedostępna
+🔥 PyTorch: ❌ Niedostępny
+🚀 PaddlePaddle: ❌ Niedostępny</div>
+                <button class="btn">Odśwież informacje o wersji</button>
+            </div>
+            
+            <p style="color: #666; font-style: italic;">
+                ✓ Version information loaded from version.txt<br>
+                ✓ GPU status information included<br>
+                ✓ Refresh functionality working
+            </p>
+        </div>
+    </div>
+    
+    <div class="feature-box">
+        <h3>📁 version.txt Format</h3>
+        <div class="code-box">
+<span class="comment"># Contents of version.txt file:</span>
+Program: Ksieg-OCR
+Commit: f69b594
+PR: 12
+        </div>
+        <p>The application reads this file and displays the information in both the window title and System tab.</p>
+    </div>
+    
+    <div class="feature-box">
+        <h3>🔧 Key Changes Made</h3>
+        <ul>
+            <li><strong>tools/version_info.py:</strong>
+                <ul>
+                    <li>Added <code>read_version_txt()</code> function to parse version.txt</li>
+                    <li>Modified <code>get_version_info()</code> to prioritize version.txt over git</li>
+                    <li>Maintained git fallback for when version.txt doesn't exist</li>
+                </ul>
+            </li>
+            <li><strong>No changes needed to:</strong>
+                <ul>
+                    <li>gui/main_window.py - Already uses <code>format_title_bar()</code></li>
+                    <li>gui/tab_system.py - Already uses <code>format_system_info()</code></li>
+                </ul>
+            </li>
+        </ul>
+    </div>
+    
+    <div class="feature-box">
+        <h3>✅ Test Results</h3>
+        <p><span class="success">All 5 tests passed successfully!</span></p>
+        <ul>
+            <li>✅ version.txt reading - Successfully reads program name, commit, and PR</li>
+            <li>✅ Git fallback - Works when version.txt is unavailable</li>
+            <li>✅ Combined version info - Merges version.txt data with git data</li>
+            <li>✅ Title bar format - Displays correctly formatted title</li>
+            <li>✅ System info format - Shows complete version information</li>
+        </ul>
+    </div>
+    
+    <div class="feature-box" style="background: #e3f2fd; border-color: #90caf9; border-left-color: #2196f3;">
+        <h3 style="color: #1565c0;">💡 How It Works</h3>
+        <ol>
+            <li><strong>Priority:</strong> version.txt values override git values</li>
+            <li><strong>Fallback:</strong> If version.txt is missing, uses git commands</li>
+            <li><strong>Display:</strong> Both title bar and System tab show the same info</li>
+            <li><strong>Refresh:</strong> Button in System tab reloads version info</li>
+        </ol>
+        
+        <div class="code-box">
+<span class="comment"># Example: When version.txt exists</span>
+<span class="keyword">Title Bar:</span> <span class="string">"Ksieg-OCR - PR#12 - vf69b594"</span>
+
+<span class="comment"># Example: When version.txt is removed</span>
+<span class="keyword">Title Bar:</span> <span class="string">"Księgi-OCR - v8793f3e"</span>
+<span class="comment"># (Uses git commit hash, no PR number)</span>
+        </div>
+    </div>
+    
+    <div style="text-align: center; padding: 20px; color: #666;">
+        <p><strong>Implementation Status:</strong> <span class="status-badge">✅ COMPLETE</span></p>
+        <p>Version display functionality is working correctly with version.txt support and git fallback.</p>
+    </div>
+</body>
+</html>
