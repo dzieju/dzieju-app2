@@ -1,15 +1,14 @@
+# Code for the IMAP tab
+
 import tkinter as tk
 from tkinter import ttk
 
-
-class ImapTab(ttk.Frame):
+class TabPocztaIMAP:
     def __init__(self, parent):
-        super().__init__(parent)
-        
-        # Create a label with centered text
-        label = ttk.Label(
-            self, 
-            text="tu będzie wyszukiwanie poczty IMAP",
-            font=("Arial", 14)
-        )
-        label.place(relx=0.5, rely=0.5, anchor="center")
+        self.frame = ttk.Frame(parent)
+        self.label = ttk.Label(self.frame, text="This is the Poczta IMAP tab")
+        self.label.pack(padx=10, pady=10)
+        # Additional widgets and logic for the IMAP tab
+
+    def get_frame(self):
+        return self.frame
