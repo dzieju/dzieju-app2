@@ -1,9 +1,9 @@
-name: Auto-update version.txt on master merge
+name: Auto-update version.txt on main merge
 
 on:
   push:
     branches:
-      - master
+      - main
 
 jobs:
   update-version-txt:
