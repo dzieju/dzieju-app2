@@ -6,6 +6,32 @@ import subprocess
 import re
 
 
+def read_version_txt():
+    """
+    Read version information from version.txt file.
+    Returns dict with program_name, commit_hash, and pr_number or None if file doesn't exist.
+    """
+    version_file = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'version.txt')
+    if not os.path.exists(version_file):
+        return None
+    
+    try:
+        info = {}
+        with open(version_file, 'r', encoding='utf-8') as f:
+            for line in f:
+                line = line.strip()
+                if line.startswith('Program:'):
+                    info['program_name'] = line.split(':', 1)[1].strip()
+                elif line.startswith('Commit:'):
+                    info['commit_hash'] = line.split(':', 1)[1].strip()
+                elif line.startswith('PR:'):
+                    info['pr_number'] = line.split(':', 1)[1].strip()
+        
+        return info if info else None
+    except Exception:
+        return None
+
+
 def get_git_commit_hash(short=True):
     """Get the current git commit hash."""
     try:
@@ -66,10 +92,25 @@ def get_program_name():
 
 
 def get_version_info():
-    """Get complete version information including program name, PR, and commit."""
+    """Get complete version information including program name, PR, and commit.
+    
+    First tries to read from version.txt, then falls back to git information.
+    version.txt values take priority if present.
+    """
+    # Start with defaults
     program_name = get_program_name()
     commit_hash = get_git_commit_hash(short=True)
     pr_number = get_pr_number()
+    
+    # Try to read from version.txt and override with those values
+    version_txt_info = read_version_txt()
+    if version_txt_info:
+        if 'program_name' in version_txt_info:
+            program_name = version_txt_info['program_name']
+        if 'commit_hash' in version_txt_info:
+            commit_hash = version_txt_info['commit_hash']
+        if 'pr_number' in version_txt_info:
+            pr_number = version_txt_info['pr_number']
     
     info = {
         'program_name': program_name,
