@@ -1,7 +1,7 @@
 ╔═══════════════════════════════════════════════════════════════════════════════╗
 ║                      📋 KSIĘGA PRZYCHODÓW I ROZCHODÓW                        ║
 ╠═══════════════════════════════════════════════════════════════════════════════╣
-║ [Przeszukiwanie Poczty] [Konfiguracja poczty] [Zakupy] [★ System ★]         ║
+║ [Poczta Exchange] [Konfiguracja poczty] [Zakupy] [★ System ★]               ║
 ╠═══════════════════════════════════════════════════════════════════════════════╣
 ║                                                                               ║
 ║  [Operacje systemowe] [Zależności środowiskowe] [Konfiguracja OCR] [✨Logi]  ║
@@ -20,8 +20,8 @@
 ║  │ 2025-09-25 14:24:20 | Inicjalizacja MainWindow                       │ ║
 ║  │ 2025-09-25 14:24:20 | Konfiguracja stylu GUI zakończona              │ ║
 ║  │ 2025-09-25 14:24:20 | Utworzenie głównego Notebook                   │ ║
-║  │ 2025-09-25 14:24:20 | Ładowanie zakładki: Przeszukiwanie Poczty      │ ║
-║  │ 2025-09-25 14:24:20 | Zakładka 'Przeszukiwanie Poczty' załadowana    │ ║
+║  │ 2025-09-25 14:24:20 | Ładowanie zakładki: Poczta Exchange            │ ║
+║  │ 2025-09-25 14:24:20 | Zakładka 'Poczta Exchange' załadowana          │ ║
 ║  │ 2025-09-25 14:24:20 | Ładowanie zakładki: Konfiguracja poczty        │ ║
 ║  │ 2025-09-25 14:24:20 | Zakładka 'Konfiguracja poczty' załadowana      │ ║
 ║  │ 2025-09-25 14:24:20 | Ładowanie zakładki: Zakupy                     │ ║

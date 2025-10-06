@@ -26,11 +26,11 @@ class MainWindow(tk.Tk):
         notebook.pack(fill="both", expand=True)
         logger.log("Utworzenie głównego Notebook")
 
-        # Zakładka: Przeszukiwanie Poczty (first tab)
-        logger.log("Ładowanie zakładki: Przeszukiwanie Poczty")
+        # Zakładka: Poczta Exchange (first tab)
+        logger.log("Ładowanie zakładki: Poczta Exchange")
         mail_search_tab = MailSearchTab(notebook)
-        notebook.add(mail_search_tab, text="Przeszukiwanie Poczty")
-        logger.log("Zakładka 'Przeszukiwanie Poczty' załadowana")
+        notebook.add(mail_search_tab, text="Poczta Exchange")
+        logger.log("Zakładka 'Poczta Exchange' załadowana")
 
         # Zakładka: Konfiguracja poczty
         logger.log("Ładowanie zakładki: Konfiguracja poczty")
