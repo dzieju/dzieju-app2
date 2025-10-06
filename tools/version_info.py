@@ -131,7 +131,7 @@ def format_title_bar():
         title_parts.append(f"PR#{info['pr_number']}")
     
     if info['commit_hash'] and info['commit_hash'] != "unknown":
-        title_parts.append(f"v{info['commit_hash']}")
+        title_parts.append(f"v{info['commit_hash'][-5:]}")
     
     return " - ".join(title_parts)
 
