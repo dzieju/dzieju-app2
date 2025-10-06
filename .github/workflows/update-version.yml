@@ -1,33 +1,46 @@
-name: Auto-update version.txt after PR merge
+name: Auto-update version.txt on main merge
 
 on:
-  pull_request:
-    types: [closed]
+  push:
+    branches:
+      - main
 
 jobs:
-  update-version:
-    if: github.event.pull_request.merged == true && github.base_ref == 'master'
+  update-version-txt:
     runs-on: ubuntu-latest
+
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
+    - name: Checkout repository
+      uses: actions/checkout@v4
 
-      - name: Get commit SHA
-        id: sha
-        run: echo "sha=$(git rev-parse HEAD)" >> $GITHUB_OUTPUT
+    - name: Get short commit SHA (last 5 chars)
+      id: get_sha
+      run: echo "sha=$(git rev-parse HEAD | tail -c 6)" >> $GITHUB_OUTPUT
 
-      - name: Update version.txt
-        run: |
-          echo "Program: Ksieg-OCR" > version.txt
-          echo "Commit: ${{ steps.sha.outputs.sha }}" >> version.txt
-          echo "PR: ${{ github.event.pull_request.number }}" >> version.txt
+    - name: Get PR number (if available)
+      id: pr_num
+      run: |
+        PR_NUMBER=""
+        PR_NUMBER=$(git log -1 --pretty=%B | grep -Eo "Merge pull request #([0-9]+)" | grep -Eo "[0-9]+")
+        if [[ -z "$PR_NUMBER" && -n "${{ github.event.pull_request.number }}" ]]; then
+          PR_NUMBER="${{ github.event.pull_request.number }}"
+        fi
+        echo "pr=$PR_NUMBER" >> $GITHUB_OUTPUT
 
-      - name: Commit & push version.txt
-        run: |
-          git config --global user.name "GitHub Actions"
-          git config --global user.email "actions@github.com"
-          git add version.txt
-          git commit -m "Auto-update version.txt after PR #${{ github.event.pull_request.number }} merge"
-          git push
+    - name: Update version.txt
+      run: |
+        echo "Program: Ksieg-OCR" > version.txt
+        echo "Commit: ${{ steps.get_sha.outputs.sha }}" >> version.txt
+        if [ -n "${{ steps.pr_num.outputs.pr }}" ]; then
+          echo "PR: ${{ steps.pr_num.outputs.pr }}" >> version.txt
+        else
+          echo "PR: " >> version.txt
+        fi
+
+    - name: Commit & push version.txt
+      run: |
+        git config --global user.name "GitHub Actions"
+        git config --global user.email "actions@github.com"
+        git add version.txt
+        git commit -m "Auto-update version.txt after merge/push"
+        git push
