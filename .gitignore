@@ -32,6 +32,7 @@ temp_*/
 
 # Configuration files with sensitive data
 exchange_config.json
+imap_config.json
 invoice_search_state.json
 
 # IDE files
@@ -58,3 +59,5 @@ test_*.py
 *test*.png
 mail_search*.png
 przeszukiwanie_poczty_tab.png
+# Demo HTML files
+*_demo.html

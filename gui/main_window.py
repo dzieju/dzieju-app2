@@ -2,6 +2,7 @@ import tkinter as tk
 from tkinter import ttk
 from gui.mail_config_widget import MailConfigWidget
 from gui.tab_mail_search import MailSearchTab
+from gui.tab_imap_config import ImapConfigTab
 from gui.tab_system import SystemTab
 from gui.tab_zakupy import ZakupiTab
 from tools import logger
@@ -31,6 +32,12 @@ class MainWindow(tk.Tk):
         mail_search_tab = MailSearchTab(notebook)
         notebook.add(mail_search_tab, text="Poczta Exchange")
         logger.log("Zakładka 'Poczta Exchange' załadowana")
+
+        # Zakładka: Poczta IMAP
+        logger.log("Ładowanie zakładki: Poczta IMAP")
+        imap_config_tab = ImapConfigTab(notebook)
+        notebook.add(imap_config_tab, text="Poczta IMAP")
+        logger.log("Zakładka 'Poczta IMAP' załadowana")
 
         # Zakładka: Konfiguracja poczty
         logger.log("Ładowanie zakładki: Konfiguracja poczty")
