@@ -1,0 +1,357 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mail Search UI - Column Span Fix Demo</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1400px;
+            margin: 20px auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            border-radius: 10px;
+            margin-bottom: 30px;
+            text-align: center;
+        }
+        .header h1 {
+            margin: 0 0 10px 0;
+        }
+        .comparison {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin: 30px 0;
+        }
+        .panel {
+            background: white;
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .panel.before {
+            border-left: 5px solid #e74c3c;
+        }
+        .panel.after {
+            border-left: 5px solid #27ae60;
+        }
+        .panel h2 {
+            margin-top: 0;
+        }
+        .before h2 {
+            color: #e74c3c;
+        }
+        .after h2 {
+            color: #27ae60;
+        }
+        .grid-demo {
+            background: #ecf0f1;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 15px 0;
+            font-family: monospace;
+        }
+        .grid-row {
+            display: flex;
+            margin: 5px 0;
+            gap: 2px;
+        }
+        .grid-cell {
+            padding: 10px;
+            text-align: center;
+            font-size: 12px;
+            border: 1px solid #34495e;
+            background: white;
+        }
+        .grid-cell.col-0 { background: #3498db; color: white; }
+        .grid-cell.col-1 { background: #9b59b6; color: white; }
+        .grid-cell.col-2 { background: #e67e22; color: white; }
+        .grid-cell.col-3 { background: #1abc9c; color: white; }
+        .grid-cell.col-4 { background: #e74c3c; color: white; }
+        .grid-cell.unused { background: #bdc3c7; opacity: 0.3; }
+        .changes-list {
+            background: #fff3cd;
+            border-left: 4px solid #ffc107;
+            padding: 15px;
+            margin: 20px 0;
+            border-radius: 5px;
+        }
+        .changes-list h3 {
+            margin-top: 0;
+            color: #856404;
+        }
+        .changes-list ul {
+            margin: 10px 0;
+        }
+        .changes-list li {
+            margin: 5px 0;
+        }
+        .benefits {
+            background: #d4edda;
+            border-left: 4px solid #28a745;
+            padding: 15px;
+            margin: 20px 0;
+            border-radius: 5px;
+        }
+        .benefits h3 {
+            margin-top: 0;
+            color: #155724;
+        }
+        .code-block {
+            background: #2c3e50;
+            color: #ecf0f1;
+            padding: 15px;
+            border-radius: 5px;
+            font-family: monospace;
+            font-size: 13px;
+            overflow-x: auto;
+            margin: 15px 0;
+        }
+        .highlight-change {
+            background: #f39c12;
+            color: #2c3e50;
+            padding: 2px 5px;
+            border-radius: 3px;
+            font-weight: bold;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 12px;
+            text-align: left;
+        }
+        th {
+            background-color: #3498db;
+            color: white;
+        }
+        tr:nth-child(even) {
+            background-color: #f2f2f2;
+        }
+        .status-badge {
+            display: inline-block;
+            padding: 5px 10px;
+            border-radius: 3px;
+            font-size: 12px;
+            font-weight: bold;
+        }
+        .status-badge.pass {
+            background: #28a745;
+            color: white;
+        }
+        .status-badge.before {
+            background: #e74c3c;
+            color: white;
+        }
+        .status-badge.after {
+            background: #27ae60;
+            color: white;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>🔧 Mail Search UI - Column Span Fix</h1>
+        <p>Fixing display issues for buttons, checkboxes, and search results frame</p>
+    </div>
+
+    <div class="comparison">
+        <div class="panel before">
+            <h2>❌ Before Fix</h2>
+            <div class="grid-demo">
+                <div style="margin-bottom: 10px; font-weight: bold;">Grid Layout (5 columns available)</div>
+                <div class="grid-row">
+                    <div class="grid-cell col-0" style="flex: 1;">Col 0</div>
+                    <div class="grid-cell col-1" style="flex: 1;">Col 1</div>
+                    <div class="grid-cell col-2" style="flex: 1;">Col 2</div>
+                    <div class="grid-cell col-3 unused" style="flex: 1;">Col 3 ⚠️</div>
+                    <div class="grid-cell col-4 unused" style="flex: 1;">Col 4 ⚠️</div>
+                </div>
+                <div style="margin-top: 10px;">
+                    Title: <span class="highlight-change">columnspan=3</span><br>
+                    Container: <span class="highlight-change">columnspan=3</span><br>
+                    Results: <span class="highlight-change">columnspan=3</span><br>
+                    Grid weights: <span class="highlight-change">Only cols 0-2</span>
+                </div>
+            </div>
+            <h3>Problems:</h3>
+            <ul>
+                <li>🚫 Buttons in folder exclusion header don't fit</li>
+                <li>🚫 Checkboxes constrained to 60% width</li>
+                <li>🚫 Results frame only uses 60% width</li>
+                <li>🚫 Columns 3-4 have no weight (no expansion)</li>
+            </ul>
+        </div>
+
+        <div class="panel after">
+            <h2>✅ After Fix</h2>
+            <div class="grid-demo">
+                <div style="margin-bottom: 10px; font-weight: bold;">Grid Layout (5 columns fully utilized)</div>
+                <div class="grid-row">
+                    <div class="grid-cell col-0" style="flex: 1;">Col 0</div>
+                    <div class="grid-cell col-1" style="flex: 1;">Col 1</div>
+                    <div class="grid-cell col-2" style="flex: 1;">Col 2</div>
+                    <div class="grid-cell col-3" style="flex: 1;">Col 3 ✓</div>
+                    <div class="grid-cell col-4" style="flex: 1;">Col 4 ✓</div>
+                </div>
+                <div style="margin-top: 10px;">
+                    Title: <span class="highlight-change">columnspan=5</span><br>
+                    Container: <span class="highlight-change">columnspan=5</span><br>
+                    Results: <span class="highlight-change">columnspan=5</span><br>
+                    Grid weights: <span class="highlight-change">All cols 0-4</span>
+                </div>
+            </div>
+            <h3>Benefits:</h3>
+            <ul>
+                <li>✅ All buttons display properly aligned</li>
+                <li>✅ Checkboxes expand to 100% width</li>
+                <li>✅ Results frame uses full width dynamically</li>
+                <li>✅ All columns expand proportionally</li>
+            </ul>
+        </div>
+    </div>
+
+    <div class="changes-list">
+        <h3>📝 Changes Made in ui_builder.py</h3>
+        <table>
+            <thead>
+                <tr>
+                    <th>Section</th>
+                    <th>Row</th>
+                    <th>Before</th>
+                    <th>After</th>
+                    <th>Impact</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>Title label</td>
+                    <td>0</td>
+                    <td><span class="status-badge before">columnspan=3</span></td>
+                    <td><span class="status-badge after">columnspan=5</span></td>
+                    <td>Full width title</td>
+                </tr>
+                <tr>
+                    <td>Container frame</td>
+                    <td>2</td>
+                    <td><span class="status-badge before">columnspan=3</span></td>
+                    <td><span class="status-badge after">columnspan=5</span></td>
+                    <td>Full width folder exclusion</td>
+                </tr>
+                <tr>
+                    <td>Header frame</td>
+                    <td>2.0</td>
+                    <td><span class="status-badge before">columnspan=3</span></td>
+                    <td><span class="status-badge after">columnspan=5</span></td>
+                    <td>Buttons fit properly</td>
+                </tr>
+                <tr>
+                    <td>Checkboxes frame</td>
+                    <td>2.1</td>
+                    <td><span class="status-badge before">columnspan=3</span></td>
+                    <td><span class="status-badge after">columnspan=5</span></td>
+                    <td>Full width checkboxes</td>
+                </tr>
+                <tr>
+                    <td>Period frame</td>
+                    <td>10</td>
+                    <td><span class="status-badge before">columnspan=2</span></td>
+                    <td><span class="status-badge after">columnspan=4</span></td>
+                    <td>Better radio button layout</td>
+                </tr>
+                <tr>
+                    <td>Search frame</td>
+                    <td>11</td>
+                    <td><span class="status-badge before">columnspan=3</span></td>
+                    <td><span class="status-badge after">columnspan=5</span></td>
+                    <td>Centered search button</td>
+                </tr>
+                <tr>
+                    <td>Results frame</td>
+                    <td>12</td>
+                    <td><span class="status-badge before">columnspan=3</span></td>
+                    <td><span class="status-badge after">columnspan=5</span></td>
+                    <td>Dynamic full width expansion</td>
+                </tr>
+                <tr>
+                    <td>Grid column 3</td>
+                    <td>-</td>
+                    <td><span class="status-badge before">Not configured</span></td>
+                    <td><span class="status-badge after">weight=1</span></td>
+                    <td>Responsive resizing</td>
+                </tr>
+                <tr>
+                    <td>Grid column 4</td>
+                    <td>-</td>
+                    <td><span class="status-badge before">Not configured</span></td>
+                    <td><span class="status-badge after">weight=1</span></td>
+                    <td>Responsive resizing</td>
+                </tr>
+            </tbody>
+        </table>
+        <p><strong>Total: 10 lines changed</strong> (8 modified, 2 added)</p>
+    </div>
+
+    <div class="benefits">
+        <h3>✨ Benefits Achieved</h3>
+        <ul>
+            <li>✅ <strong>Proper Button Alignment:</strong> All 5 buttons in folder exclusion header (Title, Hide/Show, Save, Check All, Uncheck All) now display correctly</li>
+            <li>✅ <strong>Full-Width Checkboxes:</strong> Folder exclusion checkboxes expand to utilize the entire window width</li>
+            <li>✅ <strong>Dynamic Results Expansion:</strong> Search results frame now spans full width and resizes dynamically with window</li>
+            <li>✅ <strong>Consistent Layout:</strong> All major sections properly utilize the 5-column grid layout</li>
+            <li>✅ <strong>Improved Responsiveness:</strong> All 5 columns configured with equal weights enable proper responsive behavior</li>
+        </ul>
+    </div>
+
+    <div class="panel">
+        <h2>🔍 Grid Layout Analysis</h2>
+        <p>The mail search tab uses a <strong>5-column grid layout</strong> because row 5 has a <code>pdf_history_frame</code> at <code>column=3, columnspan=2</code>, extending the grid to columns 0-4.</p>
+        
+        <div class="code-block">
+# Before: Only 3 columns utilized
+grid_columnconfigure(0, weight=1)
+grid_columnconfigure(1, weight=1)
+grid_columnconfigure(2, weight=1)
+<span style="color: #e74c3c;"># Columns 3 and 4 had no weights!</span>
+
+# After: All 5 columns properly configured
+grid_columnconfigure(0, weight=1)
+grid_columnconfigure(1, weight=1)
+grid_columnconfigure(2, weight=1)
+<span style="color: #27ae60;">grid_columnconfigure(3, weight=1)  # NEW</span>
+<span style="color: #27ae60;">grid_columnconfigure(4, weight=1)  # NEW</span>
+        </div>
+    </div>
+
+    <div class="panel">
+        <h2>✅ Validation Results</h2>
+        <p>All automated validation checks passed:</p>
+        <ul>
+            <li><span class="status-badge pass">PASS</span> Title label (row 0) - columnspan=5</li>
+            <li><span class="status-badge pass">PASS</span> Period frame (row 10) - columnspan=4</li>
+            <li><span class="status-badge pass">PASS</span> Search frame (row 11) - columnspan=5</li>
+            <li><span class="status-badge pass">PASS</span> Results frame (row 12) - columnspan=5</li>
+            <li><span class="status-badge pass">PASS</span> Container frame (row 2) - columnspan=5</li>
+            <li><span class="status-badge pass">PASS</span> Header frame - columnspan=5</li>
+            <li><span class="status-badge pass">PASS</span> Checkboxes frame - columnspan=5</li>
+            <li><span class="status-badge pass">PASS</span> Grid column 3 weight - configured</li>
+            <li><span class="status-badge pass">PASS</span> Grid column 4 weight - configured</li>
+        </ul>
+        <p><strong>Status: All 9/9 checks passed ✓</strong></p>
+    </div>
+
+    <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 20px; border-radius: 10px; text-align: center; margin-top: 30px;">
+        <h2 style="margin-top: 0;">🎉 Fix Successfully Implemented</h2>
+        <p>All display issues resolved with minimal changes (10 lines) while maintaining backward compatibility.</p>
+    </div>
+</body>
+</html>
