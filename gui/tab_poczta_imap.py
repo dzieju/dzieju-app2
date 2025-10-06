@@ -1,15 +1,12 @@
 import tkinter as tk
 from tkinter import ttk
 
-
-class ImapTab(ttk.Frame):
-    def __init__(self, parent):
-        super().__init__(parent)
-        
-        # Create a label with centered text
+class TabPocztaIMAP(ttk.Frame):
+    def __init__(self, master=None, **kwargs):
+        super().__init__(master, **kwargs)
         label = ttk.Label(
-            self, 
+            self,
             text="tu będzie wyszukiwanie poczty IMAP",
-            font=("Arial", 14)
+            font=("Arial", 16)
         )
-        label.place(relx=0.5, rely=0.5, anchor="center")
+        label.place(relx=0.5, rely=0.5, anchor=tk.CENTER)
