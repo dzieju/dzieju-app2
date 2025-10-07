@@ -1,3 +1,3 @@
 Program: Ksieg-OCR
-Commit: 21df7
-PR: 19
+Commit: 00f0f
+PR: 21
