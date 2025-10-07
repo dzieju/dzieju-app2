@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Pink Color Removal - Demo</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: #eee;
+        }
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+        h1 {
+            text-align: center;
+            color: #333;
+        }
+        .comparison {
+            display: flex;
+            gap: 20px;
+            margin: 30px 0;
+        }
+        .demo-window {
+            flex: 1;
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        .demo-window h2 {
+            margin-top: 0;
+            text-align: center;
+            padding: 10px;
+            border-radius: 5px;
+        }
+        .before h2 {
+            background: #ffcccc;
+            color: #c00;
+        }
+        .after h2 {
+            background: #ccffcc;
+            color: #0a0;
+        }
+        .window-mockup {
+            border: 3px solid #333;
+            border-radius: 8px;
+            overflow: hidden;
+            margin-top: 20px;
+        }
+        .title-bar {
+            background: #333;
+            color: white;
+            padding: 8px;
+            font-size: 12px;
+        }
+        .window-content {
+            padding: 0;
+        }
+        .tabs {
+            display: flex;
+            border-bottom: 2px solid #ddd;
+        }
+        .tab {
+            padding: 12px 20px;
+            cursor: pointer;
+            border: 1px solid #ddd;
+            border-bottom: none;
+            margin: 0 2px;
+            border-radius: 5px 5px 0 0;
+            font-size: 13px;
+        }
+        .before .tab {
+            background: #E8F4FF;
+        }
+        .before .tab.active {
+            background: #FFE8F4;
+            font-weight: bold;
+        }
+        .before .main-area {
+            background: #FFE8E8;
+            padding: 20px;
+            min-height: 200px;
+        }
+        .after .tab {
+            background: #E8F4FF;
+        }
+        .after .tab.active {
+            background: #E8F4FF;
+            font-weight: bold;
+        }
+        .after .main-area {
+            background: #F8FAFC;
+            padding: 20px;
+            min-height: 200px;
+        }
+        .label {
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+        .before .label {
+            background: #FFE8E8;
+            border: 1px solid #ddd;
+        }
+        .after .label {
+            background: #F8FAFC;
+            border: 1px solid #ddd;
+        }
+        .button {
+            padding: 8px 16px;
+            margin: 5px;
+            border-radius: 4px;
+            border: 1px solid #999;
+            cursor: pointer;
+            display: inline-block;
+            font-size: 13px;
+        }
+        .button.default {
+            background: #E8F4FF;
+        }
+        .before .button.pressed {
+            background: #FFE8F4;
+        }
+        .after .button.pressed {
+            background: #E8F4FF;
+        }
+        .color-legend {
+            margin-top: 20px;
+            padding: 15px;
+            background: #f9f9f9;
+            border-radius: 5px;
+            font-size: 12px;
+        }
+        .color-legend h3 {
+            margin-top: 0;
+            font-size: 14px;
+        }
+        .legend-item {
+            display: flex;
+            align-items: center;
+            margin: 5px 0;
+        }
+        .legend-color {
+            width: 40px;
+            height: 20px;
+            border: 1px solid #333;
+            margin-right: 10px;
+            border-radius: 3px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎨 Usunięcie Różowego Koloru - Porównanie UI</h1>
+        
+        <div class="comparison">
+            <div class="demo-window before">
+                <h2>❌ PRZED (z różowym)</h2>
+                <div class="window-mockup">
+                    <div class="title-bar">KSIEGI-OCR Application</div>
+                    <div class="window-content">
+                        <div class="tabs">
+                            <div class="tab">Poczta Exchange</div>
+                            <div class="tab active">Poczta IMAP</div>
+                            <div class="tab">Zakupy</div>
+                        </div>
+                        <div class="main-area">
+                            <div class="label">Etykieta 1</div>
+                            <div class="label">Etykieta 2</div>
+                            <div style="margin-top: 15px;">
+                                <div class="button default">Przycisk</div>
+                                <div class="button pressed">Wciśnięty</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="color-legend">
+                    <h3>Kolory różowe:</h3>
+                    <div class="legend-item">
+                        <div class="legend-color" style="background: #FFE8E8;"></div>
+                        <span>#FFE8E8 - Tło okna</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-color" style="background: #FFE8F4;"></div>
+                        <span>#FFE8F4 - Aktywna zakładka</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-color" style="background: #FFE8F4;"></div>
+                        <span>#FFE8F4 - Wciśnięty przycisk</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="demo-window after">
+                <h2>✅ PO (bez różowego)</h2>
+                <div class="window-mockup">
+                    <div class="title-bar">KSIEGI-OCR Application</div>
+                    <div class="window-content">
+                        <div class="tabs">
+                            <div class="tab">Poczta Exchange</div>
+                            <div class="tab active">Poczta IMAP</div>
+                            <div class="tab">Zakupy</div>
+                        </div>
+                        <div class="main-area">
+                            <div class="label">Etykieta 1</div>
+                            <div class="label">Etykieta 2</div>
+                            <div style="margin-top: 15px;">
+                                <div class="button default">Przycisk</div>
+                                <div class="button pressed">Wciśnięty</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="color-legend">
+                    <h3>Kolory neutralne:</h3>
+                    <div class="legend-item">
+                        <div class="legend-color" style="background: #F8FAFC;"></div>
+                        <span>#F8FAFC - Tło okna (jasny szary)</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-color" style="background: #E8F4FF;"></div>
+                        <span>#E8F4FF - Aktywna zakładka (niebieski)</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-color" style="background: #E8F4FF;"></div>
+                        <span>#E8F4FF - Wciśnięty przycisk (niebieski)</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div style="background: white; padding: 20px; border-radius: 10px; margin-top: 30px;">
+            <h2 style="text-align: center; color: #2B579A;">✨ Podsumowanie</h2>
+            <ul style="line-height: 2; font-size: 15px;">
+                <li>✅ Usunięto <strong>wszystkie różowe kolory</strong> (#FFE8E8, #FFE8F4)</li>
+                <li>✅ Zastosowano <strong>neutralny jasny szary</strong> (#F8FAFC) zamiast różowego tła</li>
+                <li>✅ Zastosowano <strong>niebieski pastelowy</strong> (#E8F4FF) zamiast różowych elementów interaktywnych</li>
+                <li>✅ Kolor #F8FAFC pochodzi z istniejącej klasy <code>ModernTheme</code></li>
+                <li>✅ Zachowano spójność z profesjonalną paletą kolorów blue/gray</li>
+            </ul>
+        </div>
+    </div>
+</body>
+</html>

@@ -19,14 +19,14 @@ class MainWindow(tk.Tk):
         logger.log(f"Tytuł aplikacji ustawiony: {title_text}")
         self.geometry("900x600")
 
-        # Apply pastel background color
-        self.configure(bg="#FFE8E8")  # Soft pastel pink background
+        # Apply neutral background color
+        self.configure(bg="#F8FAFC")  # Light gray background
         
         style = ttk.Style(self)
         style.theme_use("clam")
         
         # Configure pastel styles for notebook tabs
-        style.configure("TNotebook", background="#FFE8E8", borderwidth=0)
+        style.configure("TNotebook", background="#F8FAFC", borderwidth=0)
         style.configure("TNotebook.Tab", 
                        background="#E8F4FF",  # Pastel blue
                        foreground="#333333",
@@ -34,13 +34,13 @@ class MainWindow(tk.Tk):
                        borderwidth=1,
                        relief="raised")
         style.map("TNotebook.Tab",
-                 background=[("selected", "#FFE8F4"),  # Pastel pink when selected
+                 background=[("selected", "#E8F4FF"),  # Pastel blue when selected
                             ("active", "#E8FFE8")],     # Pastel green on hover
                  foreground=[("selected", "#000000")])
         
         # Configure pastel styles for labels
         style.configure("TLabel",
-                       background="#FFE8E8",  # Match main window background
+                       background="#F8FAFC",  # Match main window background
                        foreground="#333333")
         
         # Configure pastel styles for buttons
@@ -52,7 +52,7 @@ class MainWindow(tk.Tk):
                        padding=[10, 5])
         style.map("TButton",
                  background=[("active", "#E8FFE8"),     # Pastel green on hover
-                            ("pressed", "#FFE8F4")],    # Pastel pink when pressed
+                            ("pressed", "#E8F4FF")],    # Pastel blue when pressed
                  relief=[("pressed", "sunken")])
         
         logger.log("Konfiguracja stylu GUI zakończona (pastel theme)")

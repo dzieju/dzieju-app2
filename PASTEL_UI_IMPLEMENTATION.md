@@ -8,28 +8,28 @@ This document describes the pastel UI styling applied to the main window of the 
 ### File Modified: `gui/main_window.py`
 
 #### 1. Main Window Background
-- Applied soft pastel pink background color (`#FFE8E8`) to the main window
-- Uses `self.configure(bg="#FFE8E8")`
+- Applied light gray background color (`#F8FAFC`) to the main window
+- Uses `self.configure(bg="#F8FAFC")`
 
 #### 2. Notebook Tab Styling
-- **TNotebook**: Background set to `#FFE8E8` (matches main window), borderwidth set to 0
+- **TNotebook**: Background set to `#F8FAFC` (matches main window), borderwidth set to 0
 - **TNotebook.Tab**:
   - Default background: `#E8F4FF` (pastel blue)
-  - Selected background: `#FFE8F4` (pastel pink)
+  - Selected background: `#E8F4FF` (pastel blue)
   - Hover background: `#E8FFE8` (pastel green)
   - Text color: `#333333` (dark gray)
   - Selected text color: `#000000` (black)
   - Padding: `[20, 10]` for better visual appearance
 
 #### 3. Label Styling
-- **TLabel**: Background set to `#FFE8E8` (matches main window)
+- **TLabel**: Background set to `#F8FAFC` (matches main window)
 - Text color: `#333333` (dark gray)
 
 #### 4. Button Styling
 - **TButton**:
   - Default background: `#E8F4FF` (pastel blue)
   - Hover background: `#E8FFE8` (pastel green)
-  - Pressed background: `#FFE8F4` (pastel pink)
+  - Pressed background: `#E8F4FF` (pastel blue)
   - Text color: `#333333` (dark gray)
   - Padding: `[10, 5]` for comfortable clickable area
 
@@ -37,13 +37,13 @@ This document describes the pastel UI styling applied to the main window of the 
 
 | Element | Color Code | Description |
 |---------|-----------|-------------|
-| Main Window | `#FFE8E8` | Soft pastel pink |
+| Main Window | `#F8FAFC` | Light gray |
 | Tab Default | `#E8F4FF` | Pastel blue |
-| Tab Selected | `#FFE8F4` | Pastel pink |
+| Tab Selected | `#E8F4FF` | Pastel blue |
 | Tab Hover | `#E8FFE8` | Pastel green |
 | Button Default | `#E8F4FF` | Pastel blue |
 | Button Hover | `#E8FFE8` | Pastel green |
-| Button Pressed | `#FFE8F4` | Pastel pink |
+| Button Pressed | `#E8F4FF` | Pastel blue |
 | Text | `#333333` | Dark gray |
 
 ## IMAP Tab Verification
@@ -94,4 +94,4 @@ The implementation has been validated for:
 - **Files modified**: 1 (`gui/main_window.py`)
 
 ## Summary
-The pastel UI theme has been successfully implemented with soft, pleasant colors that provide a modern and welcoming appearance. All tabs (including the IMAP tab) are properly configured with the new styling, and the implementation maintains backward compatibility while enhancing the visual experience.
+The pastel UI theme has been successfully implemented with soft, pleasant colors that provide a modern and welcoming appearance. All pink colors have been removed and replaced with neutral light gray and blue tones. All tabs (including the IMAP tab) are properly configured with the new styling, and the implementation maintains backward compatibility while enhancing the visual experience.
