@@ -1,0 +1,175 @@
+╔══════════════════════════════════════════════════════════════════════════════╗
+║                          BEFORE - Old UI Structure                           ║
+╚══════════════════════════════════════════════════════════════════════════════╝
+
+┌──────────────────────────────────────────────────────────────────────────────┐
+│ Main Application Window                                                     │
+├──────────────────────────────────────────────────────────────────────────────┤
+│ ╔════════════╦═════════════╦══════════════════════╦═════════╦═══════╗        │
+│ ║  Poczta    ║ Poczta IMAP ║ Konfiguracja poczty  ║ Zakupy  ║System ║        │
+│ ║  Exchange  ║             ║                      ║         ║       ║        │
+│ ╚════════════╩═════════════╩══════════════════════╩═════════╩═══════╝        │
+│ ┌────────────────────────────────────────────────────────────────────────┐   │
+│ │                                                                        │   │
+│ │  Poczta Exchange Tab:                                                  │   │
+│ │  - Only search functionality                                           │   │
+│ │  - No configuration sub-tab                                            │   │
+│ │                                                                        │   │
+│ └────────────────────────────────────────────────────────────────────────┘   │
+└──────────────────────────────────────────────────────────────────────────────┘
+
+Problem: Configuration is in a separate top-level tab, not integrated with Exchange
+
+
+╔══════════════════════════════════════════════════════════════════════════════╗
+║                          AFTER - New UI Structure                            ║
+╚══════════════════════════════════════════════════════════════════════════════╝
+
+┌──────────────────────────────────────────────────────────────────────────────┐
+│ Main Application Window                                                     │
+├──────────────────────────────────────────────────────────────────────────────┤
+│ ╔═══════════════╦═════════════╦═════════╦═══════╗                            │
+│ ║ Poczta        ║ Poczta IMAP ║ Zakupy  ║System ║                            │
+│ ║ Exchange      ║             ║         ║       ║                            │
+│ ╚═══════════════╩═════════════╩═════════╩═══════╝                            │
+│ ┌────────────────────────────────────────────────────────────────────────┐   │
+│ │ Poczta Exchange Tab:                                                   │   │
+│ │ ╔══════════════╦═══════════════════╗                                   │   │
+│ │ ║ Wyszukiwanie ║ Konfiguracja      ║  ← SUB-TABS                       │   │
+│ │ ║              ║ poczty            ║                                   │   │
+│ │ ╚══════════════╩═══════════════════╝                                   │   │
+│ │ ┌──────────────────────────────────────────────────────────────────┐   │   │
+│ │ │ Exchange Configuration (ExchangeMailConfigWidget)                │   │   │
+│ │ │                                                                  │   │   │
+│ │ │ ┌──────────────┐  ┌────────────────────────────────────────┐   │   │   │
+│ │ │ │Konta Exchange│  │ Konfiguracja konta Exchange            │   │   │   │
+│ │ │ │              │  │                                        │   │   │   │
+│ │ │ │ Account 1    │  │ Nazwa konta:   [________________]     │   │   │   │
+│ │ │ │ Account 2    │  │ Adres e-mail:  [________________]     │   │   │   │
+│ │ │ │              │  │ Login:         [________________]     │   │   │   │
+│ │ │ │ [Dodaj]      │  │ Hasło:         [****************]     │   │   │   │
+│ │ │ │ [Usuń]       │  │ Serwer:        [________________]     │   │   │   │
+│ │ │ │ [Główne]     │  │ Domena:        [________________]     │   │   │   │
+│ │ │ │              │  │                                        │   │   │   │
+│ │ │ │              │  │ [Zapisz] [Testuj połączenie]          │   │   │   │
+│ │ │ └──────────────┘  └────────────────────────────────────────┘   │   │   │
+│ │ │                                                                  │   │   │
+│ │ │ Configuration stored in: exchange_mail_config.json               │   │   │
+│ │ └──────────────────────────────────────────────────────────────────┘   │   │
+│ └────────────────────────────────────────────────────────────────────────┘   │
+└──────────────────────────────────────────────────────────────────────────────┘
+
+Solution: Configuration is now integrated within the Exchange tab
+
+
+╔══════════════════════════════════════════════════════════════════════════════╗
+║                      POCZTA IMAP TAB (UNCHANGED)                             ║
+╚══════════════════════════════════════════════════════════════════════════════╝
+
+┌──────────────────────────────────────────────────────────────────────────────┐
+│ Poczta IMAP Tab (NO CHANGES):                                               │
+│ ╔══════════════╦═══════════════════╗                                         │
+│ ║ Wyszukiwanie ║ Konfiguracja      ║  ← SUB-TABS (same as before)           │
+│ ║              ║ poczty            ║                                         │
+│ ╚══════════════╩═══════════════════╝                                         │
+│ ┌──────────────────────────────────────────────────────────────────────┐     │
+│ │ Mail Configuration (MailConfigWidget)                                │     │
+│ │                                                                      │     │
+│ │ Supports multiple protocols:                                         │     │
+│ │ - Exchange                                                           │     │
+│ │ - IMAP/SMTP                                                          │     │
+│ │ - POP3/SMTP                                                          │     │
+│ │                                                                      │     │
+│ │ Configuration stored in: mail_config.json                            │     │
+│ └──────────────────────────────────────────────────────────────────────┘     │
+└──────────────────────────────────────────────────────────────────────────────┘
+
+
+╔══════════════════════════════════════════════════════════════════════════════╗
+║                            KEY DIFFERENCES                                   ║
+╚══════════════════════════════════════════════════════════════════════════════╝
+
+┌──────────────────────────────────────────────────────────────────────────────┐
+│                                                                              │
+│  TOP-LEVEL TABS (Main Window):                                              │
+│  ═══════════════════════════════                                             │
+│                                                                              │
+│  BEFORE: 5 tabs                          AFTER: 4 tabs                       │
+│  ┌─────────────────────────┐            ┌─────────────────────────┐         │
+│  │ 1. Poczta Exchange      │            │ 1. Poczta Exchange      │         │
+│  │ 2. Poczta IMAP          │            │ 2. Poczta IMAP          │         │
+│  │ 3. Konfiguracja poczty  │ ← REMOVED  │ 3. Zakupy               │         │
+│  │ 4. Zakupy               │            │ 4. System               │         │
+│  │ 5. System               │            └─────────────────────────┘         │
+│  └─────────────────────────┘                                                │
+│                                                                              │
+│  ─────────────────────────────────────────────────────────────────────────  │
+│                                                                              │
+│  POCZTA EXCHANGE TAB STRUCTURE:                                              │
+│  ═══════════════════════════════                                             │
+│                                                                              │
+│  BEFORE: Direct content                  AFTER: Sub-tabs                     │
+│  ┌─────────────────────────┐            ┌─────────────────────────┐         │
+│  │ MailSearchTab           │            │ ┌─────────────────────┐ │         │
+│  │ (search only)           │            │ │ Sub-tab 1:          │ │         │
+│  │                         │            │ │ Wyszukiwanie        │ │         │
+│  │                         │            │ │ (MailSearchTab)     │ │         │
+│  │                         │            │ ├─────────────────────┤ │         │
+│  │                         │            │ │ Sub-tab 2:          │ │         │
+│  │                         │            │ │ Konfiguracja poczty │ │         │
+│  └─────────────────────────┘            │ │ (ExchangeMailConfig)│ │         │
+│                                          │ └─────────────────────┘ │         │
+│                                          └─────────────────────────┘         │
+│                                                                              │
+│  ─────────────────────────────────────────────────────────────────────────  │
+│                                                                              │
+│  CONFIGURATION WIDGETS:                                                      │
+│  ══════════════════════                                                      │
+│                                                                              │
+│  BEFORE:                                 AFTER:                              │
+│  ┌──────────────────────┐               ┌──────────────────────┐            │
+│  │ MailConfigWidget     │               │ Exchange Tab:        │            │
+│  │ (shared by all)      │               │ ExchangeMailConfig   │            │
+│  │                      │               │ Widget               │            │
+│  │ - Exchange support   │               │ - Exchange ONLY      │            │
+│  │ - IMAP/SMTP support  │               ├──────────────────────┤            │
+│  │ - POP3/SMTP support  │               │ IMAP Tab:            │            │
+│  │                      │               │ MailConfigWidget     │            │
+│  │ Config file:         │               │ - Multi-protocol     │            │
+│  │ mail_config.json     │               │                      │            │
+│  └──────────────────────┘               │ Config files:        │            │
+│                                          │ - exchange_mail_     │            │
+│                                          │   config.json        │            │
+│                                          │ - mail_config.json   │            │
+│                                          └──────────────────────┘            │
+│                                                                              │
+└──────────────────────────────────────────────────────────────────────────────┘
+
+
+╔══════════════════════════════════════════════════════════════════════════════╗
+║                              BENEFITS                                        ║
+╚══════════════════════════════════════════════════════════════════════════════╝
+
+✅ Cleaner UI
+   - One less top-level tab (4 instead of 5)
+   - Configuration is contextually placed within mail tabs
+
+✅ Better Organization
+   - Exchange configuration is WITH Exchange functionality
+   - IMAP configuration is WITH IMAP functionality
+   - Logical grouping of related features
+
+✅ Complete Separation
+   - Exchange: TabPocztaExchange + ExchangeMailConfigWidget
+   - IMAP: TabPocztaIMAP + MailConfigWidget
+   - No shared code or configuration
+
+✅ Consistency
+   - Both Exchange and IMAP have same structure (Search + Config sub-tabs)
+   - Familiar navigation pattern
+   - Reduced learning curve
+
+✅ Maintainability
+   - Changes to Exchange config don't affect IMAP
+   - Changes to IMAP config don't affect Exchange
+   - Clear code ownership
