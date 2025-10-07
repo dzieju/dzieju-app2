@@ -129,13 +129,18 @@ class MailSearchUI:
                 value=value
             ).grid(row=0, column=i, padx=5, sticky="w")
     
-    def create_control_widgets(self, search_callback):
+    def create_control_widgets(self, search_callback, config_callback=None):
         """Create search button and status widgets"""
         search_frame = ttk.Frame(self.parent)
         search_frame.grid(row=11, column=0, columnspan=5, pady=20)
         
         search_button = ttk.Button(search_frame, text="Rozpocznij wyszukiwanie", command=search_callback)
         search_button.pack(side="left", padx=5)
+        
+        # Add configuration button if callback provided
+        if config_callback:
+            config_button = ttk.Button(search_frame, text="⚙ Konfiguracja poczty", command=config_callback)
+            config_button.pack(side="left", padx=5)
         
         status_label = ttk.Label(search_frame, text="Gotowy", foreground="green")
         status_label.pack(side="left", padx=10)
