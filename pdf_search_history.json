@@ -3767,6 +3767,30 @@
           "match_count": 0
         }
       }
+    },
+    "Protokol - Interwencja specjalisty UK-066-532 3971.pdf_c429b2f18784dca6": {
+      "attachment_name": "Protokol - Interwencja specjalisty UK-066-532 3971.pdf",
+      "first_searched": "2025-10-07T18:41:29.944861",
+      "sender_email": "u.home@mondial-assistance.pl",
+      "searches": {
+        "5732475751": {
+          "last_searched": "2025-10-07T18:41:29.944869",
+          "found_matches": false,
+          "match_count": 0
+        }
+      }
+    },
+    "19-OP-10-2025.pdf_95b56c6c1bd830b0": {
+      "attachment_name": "19-OP-10-2025.pdf",
+      "first_searched": "2025-10-07T18:41:30.077941",
+      "sender_email": "5p7h3vk1uu@allegromail.pl",
+      "searches": {
+        "5732475751": {
+          "last_searched": "2025-10-07T18:41:30.476487",
+          "found_matches": true,
+          "match_count": 1
+        }
+      }
     }
   },
   "skipped_pdfs": {
