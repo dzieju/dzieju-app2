@@ -226,6 +226,35 @@ class MailConnection:
         account_config = accounts[index]
         return self._get_account_connection(account_config)
     
+    def get_imap_account(self):
+        """Get first available IMAP/POP3 account connection (excludes Exchange accounts)"""
+        config = self.load_mail_config()
+        if not config or not config.get("accounts"):
+            log("[MAIL CONNECTION] No mail configuration or accounts found")
+            return None
+        
+        accounts = config.get("accounts", [])
+        main_index = config.get("main_account_index", 0)
+        
+        # First, try to use the main account if it's IMAP/POP3
+        if main_index < len(accounts):
+            main_account = accounts[main_index]
+            account_type = main_account.get("type", "exchange")
+            if account_type in ["imap_smtp", "pop3_smtp"]:
+                log(f"[MAIL CONNECTION] Using main account (index {main_index}) for IMAP: {main_account.get('name', 'Unknown')}")
+                return self._get_account_connection(main_account)
+        
+        # If main account is not IMAP/POP3, find the first IMAP/POP3 account
+        for idx, account_config in enumerate(accounts):
+            account_type = account_config.get("type", "exchange")
+            if account_type in ["imap_smtp", "pop3_smtp"]:
+                log(f"[MAIL CONNECTION] Using first available IMAP/POP3 account (index {idx}): {account_config.get('name', 'Unknown')}")
+                return self._get_account_connection(account_config)
+        
+        # No IMAP/POP3 accounts found
+        log("[MAIL CONNECTION] No IMAP/POP3 accounts found in configuration")
+        return None
+    
     def _get_account_connection(self, account_config):
         """Get connection for specific account configuration"""
         # Close any existing connections before creating new ones
