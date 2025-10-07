@@ -229,20 +229,27 @@ class IMAPSearchTab(ttk.Frame):
                 
                 # Add debug logging
                 from tools.logger import log
-                log("[FOLDER DISCOVERY] Starting folder discovery")
+                log("[IMAP FOLDER DISCOVERY] Starting folder discovery for IMAP tab")
                 
-                account = self.connection.get_main_account()
-                log(f"[FOLDER DISCOVERY] Got account: {account is not None}")
+                # Use get_imap_account() instead of get_main_account() to ensure only IMAP/POP3 accounts are used
+                account = self.connection.get_imap_account()
+                log(f"[IMAP FOLDER DISCOVERY] Got IMAP/POP3 account: {account is not None}")
+                
+                # Log account type for debugging
+                if account and self.connection.current_account_config:
+                    account_type = self.connection.current_account_config.get("type", "unknown")
+                    account_name = self.connection.current_account_config.get("name", "Unknown")
+                    log(f"[IMAP FOLDER DISCOVERY] Using account: '{account_name}' (type: {account_type})")
                 
                 # Update account info display after getting account
                 self.after_idle(self.update_account_info_display)
                 
                 if account:
                     folder_path = self.vars['folder_path'].get()
-                    log(f"[FOLDER DISCOVERY] Folder path: {folder_path}")
+                    log(f"[IMAP FOLDER DISCOVERY] Folder path: {folder_path}")
                     
                     folders = self.connection.get_available_folders_for_exclusion(account, folder_path)
-                    log(f"[FOLDER DISCOVERY] Found {len(folders)} folders: {folders}")
+                    log(f"[IMAP FOLDER DISCOVERY] Found {len(folders)} folders: {folders}")
                     
                     if folders:
                         self.after_idle(lambda: self._update_folder_checkboxes(folders))
@@ -253,16 +260,16 @@ class IMAPSearchTab(ttk.Frame):
                         # Still show fallback folders for user convenience
                         fallback_folders = ["SENT", "Sent", "DRAFTS", "Drafts", "SPAM", "Junk", "TRASH", "Trash"]
                         self.after_idle(lambda: self._update_folder_checkboxes(fallback_folders))
-                        log("[FOLDER DISCOVERY] Using fallback folders due to discovery failure")
+                        log("[IMAP FOLDER DISCOVERY] Using fallback folders due to discovery failure")
                 else:
-                    log("[FOLDER DISCOVERY] No account available")
-                    self._add_progress("Brak dostępnego konta pocztowego")
+                    log("[IMAP FOLDER DISCOVERY] No IMAP/POP3 account available")
+                    self._add_progress("Brak konta IMAP/POP3 - skonfiguruj konto w zakładce 'Konfiguracja poczty'")
                     
             except Exception as e:
                 from tools.logger import log
-                log(f"[FOLDER DISCOVERY] Error: {str(e)}")
+                log(f"[IMAP FOLDER DISCOVERY] Error: {str(e)}")
                 print(f"Błąd wykrywania folderów: {e}")
-                self._add_progress("Błąd wykrywania folderów - sprawdź konfigurację konta")
+                self._add_progress("Błąd wykrywania folderów - sprawdź konfigurację konta IMAP")
                 # Provide fallback folders even on error
                 fallback_folders = ["SENT", "Sent", "DRAFTS", "Drafts", "SPAM", "Junk", "TRASH", "Trash"] 
                 self.after_idle(lambda: self._update_folder_checkboxes(fallback_folders))
@@ -338,7 +345,7 @@ class IMAPSearchTab(ttk.Frame):
         threading.Thread(target=self._perform_search, daemon=True).start()
     
     def _validate_mail_configuration(self):
-        """Validate mail configuration before search"""
+        """Validate mail configuration before search - IMAP tab only validates IMAP/POP3 accounts"""
         config = self.connection.load_mail_config()
         
         if not config:
@@ -366,19 +373,31 @@ class IMAPSearchTab(ttk.Frame):
                 self.config_tab_callback()
             return False
         
-        # Check if main account is configured with required fields
-        main_index = config.get("main_account_index", 0)
-        if main_index >= len(accounts):
-            main_index = 0
+        # Filter to find only IMAP/POP3 accounts (exclude Exchange)
+        imap_accounts = [acc for acc in accounts if acc.get("type", "") in ["imap_smtp", "pop3_smtp"]]
         
-        main_account = accounts[main_index]
-        account_type = main_account.get("type", "")
-        email = main_account.get("email", "")
+        if not imap_accounts:
+            response = messagebox.askquestion(
+                "Brak konta IMAP/POP3",
+                "W konfiguracji nie znaleziono żadnych kont IMAP lub POP3.\n\n"
+                "Zakładka 'Poczta IMAP' wymaga konta IMAP lub POP3.\n"
+                "Konta Exchange nie są obsługiwane w tej zakładce.\n\n"
+                "Czy chcesz przejść do konfiguracji poczty i dodać konto IMAP/POP3?",
+                icon='warning'
+            )
+            if response == 'yes' and self.config_tab_callback:
+                self.config_tab_callback()
+            return False
+        
+        # Check the first available IMAP/POP3 account
+        imap_account = imap_accounts[0]
+        account_type = imap_account.get("type", "")
+        email = imap_account.get("email", "")
         
         if not email:
             response = messagebox.askquestion(
                 "Niepełna konfiguracja",
-                "Główne konto pocztowe nie ma ustawionego adresu e-mail.\n\n"
+                "Konto IMAP/POP3 nie ma ustawionego adresu e-mail.\n\n"
                 "Czy chcesz przejść do konfiguracji poczty?",
                 icon='warning'
             )
@@ -387,20 +406,8 @@ class IMAPSearchTab(ttk.Frame):
             return False
         
         # Validate account type specific fields
-        if account_type == "exchange":
-            server = main_account.get("exchange_server", "")
-            if not server:
-                response = messagebox.askquestion(
-                    "Niepełna konfiguracja Exchange",
-                    "Konto Exchange nie ma ustawionego adresu serwera.\n\n"
-                    "Czy chcesz przejść do konfiguracji poczty?",
-                    icon='warning'
-                )
-                if response == 'yes' and self.config_tab_callback:
-                    self.config_tab_callback()
-                return False
-        elif account_type == "imap_smtp":
-            imap_server = main_account.get("imap_server", "")
+        if account_type == "imap_smtp":
+            imap_server = imap_account.get("imap_server", "")
             if not imap_server:
                 response = messagebox.askquestion(
                     "Niepełna konfiguracja IMAP",
@@ -412,7 +419,7 @@ class IMAPSearchTab(ttk.Frame):
                     self.config_tab_callback()
                 return False
         elif account_type == "pop3_smtp":
-            pop3_server = main_account.get("pop3_server", "")
+            pop3_server = imap_account.get("pop3_server", "")
             if not pop3_server:
                 response = messagebox.askquestion(
                     "Niepełna konfiguracja POP3",
@@ -429,6 +436,20 @@ class IMAPSearchTab(ttk.Frame):
     def _perform_search(self):
         """Perform search in background thread"""
         try:
+            # Ensure IMAP account is loaded before search
+            # This is critical to prevent Exchange account usage in IMAP tab
+            from tools.logger import log
+            log("[IMAP SEARCH] Pre-loading IMAP account for search")
+            
+            account = self.connection.get_imap_account()
+            if not account:
+                log("[IMAP SEARCH] ERROR: No IMAP/POP3 account available for search")
+                self._add_result({'type': 'search_error', 'error': 'Brak dostępnego konta IMAP/POP3'})
+                return
+            
+            log(f"[IMAP SEARCH] Using account: {self.connection.current_account_config.get('name', 'Unknown') if self.connection.current_account_config else 'Unknown'}")
+            log(f"[IMAP SEARCH] Account type: {self.connection.current_account_config.get('type', 'Unknown') if self.connection.current_account_config else 'Unknown'}")
+            
             criteria = {key: var.get() if hasattr(var, 'get') else var for key, var in self.vars.items()}
             self.search_engine.search_emails_threaded(self.connection, criteria, self.current_page, self.per_page)
             
