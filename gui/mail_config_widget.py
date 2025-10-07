@@ -36,6 +36,9 @@ class MailConfigWidget(ttk.Frame):
         self.main_account_index = 0
         self.selected_account_index = 0
         
+        # Callback for when configuration is saved
+        self.on_config_saved = None
+        
         self.create_widgets()
         self.load_config()
         
@@ -456,6 +459,10 @@ class MailConfigWidget(ttk.Frame):
             with open(CONFIG_FILE, "w", encoding="utf-8") as f:
                 json.dump(config, f, indent=2, ensure_ascii=False)
             messagebox.showinfo("Zapisano", "Konfiguracja została zapisana.")
+            
+            # Notify listener that configuration was saved
+            if self.on_config_saved:
+                self.on_config_saved()
         except Exception as e:
             messagebox.showerror("Błąd", f"Nie można zapisać konfiguracji: {str(e)}")
     

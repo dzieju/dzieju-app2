@@ -53,6 +53,10 @@ class MailSearchTab(ttk.Frame):
         # Initialize components
         self.connection = MailConnection()
         self.search_engine = EmailSearchEngine(self._add_progress, self._add_result)
+        
+        # Configuration tab callback (will be set by parent)
+        self.config_tab_callback = None
+        
         self.ui_builder = MailSearchUI(self, self.vars, self.discover_folders, self.choose_pdf_save_folder, self.clear_pdf_history, self.show_pdf_history)
         
         # Initialize PDF history manager
@@ -81,7 +85,7 @@ class MailSearchTab(ttk.Frame):
         self.ui_builder.create_search_criteria_widgets()
         self.ui_builder.create_date_period_widgets()
         
-        self.search_button, self.status_label, self.account_info_label, self.folder_info_label = self.ui_builder.create_control_widgets(self.toggle_search)
+        self.search_button, self.status_label, self.account_info_label, self.folder_info_label = self.ui_builder.create_control_widgets(self.toggle_search, self._open_config_tab)
         self.results_frame = self.ui_builder.create_results_widget()
         
         # Initialize results display with the frame
@@ -89,6 +93,13 @@ class MailSearchTab(ttk.Frame):
         self.results_display.set_page_callback(self.go_to_page)
         self.results_display.set_per_page_callback(self.change_per_page)
         self.results_display.bind_selection_change()
+    
+    def _open_config_tab(self):
+        """Open configuration tab - callback set by parent"""
+        if self.config_tab_callback:
+            self.config_tab_callback()
+        else:
+            messagebox.showinfo("Informacja", "Aby skonfigurować konto pocztowe, przejdź do zakładki 'Konfiguracja poczty'.")
         
     def toggle_search(self):
         """Toggle between starting and cancelling search"""
@@ -310,6 +321,10 @@ class MailSearchTab(ttk.Frame):
     
     def start_search(self):
         """Start threaded search"""
+        # Validate configuration before starting search
+        if not self._validate_mail_configuration():
+            return
+        
         self.results_display.clear_results()
         self.search_button.config(text="Anuluj wyszukiwanie")
         self.status_label.config(text="Nawiązywanie połączenia...", foreground="blue")
@@ -321,6 +336,95 @@ class MailSearchTab(ttk.Frame):
         self.vars['excluded_folders'].set(self._get_excluded_folders_from_checkboxes())
 
         threading.Thread(target=self._perform_search, daemon=True).start()
+    
+    def _validate_mail_configuration(self):
+        """Validate mail configuration before search"""
+        config = self.connection.load_mail_config()
+        
+        if not config:
+            response = messagebox.askquestion(
+                "Brak konfiguracji poczty",
+                "Nie znaleziono konfiguracji konta pocztowego.\n\n"
+                "Aby wyszukiwać e-maile, musisz najpierw skonfigurować połączenie z serwerem pocztowym.\n\n"
+                "Czy chcesz przejść do konfiguracji poczty?",
+                icon='warning'
+            )
+            if response == 'yes' and self.config_tab_callback:
+                self.config_tab_callback()
+            return False
+        
+        accounts = config.get("accounts", [])
+        if not accounts:
+            response = messagebox.askquestion(
+                "Brak kont pocztowych",
+                "Nie znaleziono żadnych skonfigurowanych kont pocztowych.\n\n"
+                "Aby wyszukiwać e-maile, musisz dodać przynajmniej jedno konto.\n\n"
+                "Czy chcesz przejść do konfiguracji poczty?",
+                icon='warning'
+            )
+            if response == 'yes' and self.config_tab_callback:
+                self.config_tab_callback()
+            return False
+        
+        # Check if main account is configured with required fields
+        main_index = config.get("main_account_index", 0)
+        if main_index >= len(accounts):
+            main_index = 0
+        
+        main_account = accounts[main_index]
+        account_type = main_account.get("type", "")
+        email = main_account.get("email", "")
+        
+        if not email:
+            response = messagebox.askquestion(
+                "Niepełna konfiguracja",
+                "Główne konto pocztowe nie ma ustawionego adresu e-mail.\n\n"
+                "Czy chcesz przejść do konfiguracji poczty?",
+                icon='warning'
+            )
+            if response == 'yes' and self.config_tab_callback:
+                self.config_tab_callback()
+            return False
+        
+        # Validate account type specific fields
+        if account_type == "exchange":
+            server = main_account.get("exchange_server", "")
+            if not server:
+                response = messagebox.askquestion(
+                    "Niepełna konfiguracja Exchange",
+                    "Konto Exchange nie ma ustawionego adresu serwera.\n\n"
+                    "Czy chcesz przejść do konfiguracji poczty?",
+                    icon='warning'
+                )
+                if response == 'yes' and self.config_tab_callback:
+                    self.config_tab_callback()
+                return False
+        elif account_type == "imap_smtp":
+            imap_server = main_account.get("imap_server", "")
+            if not imap_server:
+                response = messagebox.askquestion(
+                    "Niepełna konfiguracja IMAP",
+                    "Konto IMAP nie ma ustawionego adresu serwera IMAP.\n\n"
+                    "Czy chcesz przejść do konfiguracji poczty?",
+                    icon='warning'
+                )
+                if response == 'yes' and self.config_tab_callback:
+                    self.config_tab_callback()
+                return False
+        elif account_type == "pop3_smtp":
+            pop3_server = main_account.get("pop3_server", "")
+            if not pop3_server:
+                response = messagebox.askquestion(
+                    "Niepełna konfiguracja POP3",
+                    "Konto POP3 nie ma ustawionego adresu serwera POP3.\n\n"
+                    "Czy chcesz przejść do konfiguracji poczty?",
+                    icon='warning'
+                )
+                if response == 'yes' and self.config_tab_callback:
+                    self.config_tab_callback()
+                return False
+        
+        return True
     
     def _perform_search(self):
         """Perform search in background thread"""
