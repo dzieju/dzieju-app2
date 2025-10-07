@@ -1,17 +1,11 @@
 {
   "excluded_folders": [
-    "!Ważne !!!",
-    "!Ważne !!!/Leasing",
-    "!Ważne !!!/Leasing/Umowy",
-    "Allegro",
     "Drafts",
     "Fotowoltaika",
     "Github",
     "Junk",
     "Kompensaty Quadra",
     "Kompensaty Quadra/Wyslane do weryfikacji",
-    "MAgbob",
-    "MAgbob/Wyslane",
     "mail",
     "mail/Elementy usunięte",
     "mail/Elementy wysłane",
@@ -33,7 +27,6 @@
     "Sponsoring/Revo",
     "Sponsoring/TrinityGames",
     "Sponsoring/UNSQ",
-    "Sprawdzic",
     "Stara poczta ",
     "Szkice",
     "TELLG",
@@ -52,5 +45,16 @@
   ],
   "exclusion_section_visible": false,
   "pdf_save_directory": "D:/Faktury/Ksiegowa/Faktury",
-  "skip_searched_pdfs": false
+  "skip_searched_pdfs": false,
+  "folder_path": "Skrzynka odbiorcza",
+  "subject_search": "",
+  "body_search": "",
+  "pdf_search_text": "5732475751",
+  "sender": "",
+  "unread_only": false,
+  "attachments_required": false,
+  "no_attachments_only": false,
+  "attachment_name": "",
+  "attachment_extension": "",
+  "selected_period": "ostatnie_3_miesiace"
 }
