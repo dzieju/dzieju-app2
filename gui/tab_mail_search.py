@@ -431,11 +431,43 @@ class MailSearchTab(ttk.Frame):
                     # Load skip searched PDFs setting
                     skip_searched = config.get("skip_searched_pdfs", False)
                     self.vars['skip_searched_pdfs'].set(skip_searched)
+                    # Load all search field values
+                    folder_path = config.get("folder_path")
+                    if folder_path:
+                        self.vars['folder_path'].set(folder_path)
+                    subject_search = config.get("subject_search")
+                    if subject_search:
+                        self.vars['subject_search'].set(subject_search)
+                    body_search = config.get("body_search")
+                    if body_search:
+                        self.vars['body_search'].set(body_search)
+                    pdf_search_text = config.get("pdf_search_text")
+                    if pdf_search_text:
+                        self.vars['pdf_search_text'].set(pdf_search_text)
+                    sender = config.get("sender")
+                    if sender:
+                        self.vars['sender'].set(sender)
+                    attachment_name = config.get("attachment_name")
+                    if attachment_name:
+                        self.vars['attachment_name'].set(attachment_name)
+                    attachment_extension = config.get("attachment_extension")
+                    if attachment_extension:
+                        self.vars['attachment_extension'].set(attachment_extension)
+                    selected_period = config.get("selected_period")
+                    if selected_period:
+                        self.vars['selected_period'].set(selected_period)
+                    # Load boolean values
+                    if "unread_only" in config:
+                        self.vars['unread_only'].set(config["unread_only"])
+                    if "attachments_required" in config:
+                        self.vars['attachments_required'].set(config["attachments_required"])
+                    if "no_attachments_only" in config:
+                        self.vars['no_attachments_only'].set(config["no_attachments_only"])
                     # Excluded folders will be loaded when folders are discovered
         except Exception as e:
             print(f"Błąd ładowania konfiguracji wyszukiwania: {e}")
 
-    def save_mail_search_config(self):
+    def save_mail_search_config(self, show_message=True):
         """Save mail search configuration to config file"""
         try:
             # Get currently excluded folders
@@ -448,16 +480,32 @@ class MailSearchTab(ttk.Frame):
                 "excluded_folders": excluded_folders,
                 "exclusion_section_visible": self.exclusion_section_visible,
                 "pdf_save_directory": self.vars['pdf_save_directory'].get(),
-                "skip_searched_pdfs": self.vars['skip_searched_pdfs'].get()
+                "skip_searched_pdfs": self.vars['skip_searched_pdfs'].get(),
+                # Save all search field values
+                "folder_path": self.vars['folder_path'].get(),
+                "subject_search": self.vars['subject_search'].get(),
+                "body_search": self.vars['body_search'].get(),
+                "pdf_search_text": self.vars['pdf_search_text'].get(),
+                "sender": self.vars['sender'].get(),
+                "unread_only": self.vars['unread_only'].get(),
+                "attachments_required": self.vars['attachments_required'].get(),
+                "no_attachments_only": self.vars['no_attachments_only'].get(),
+                "attachment_name": self.vars['attachment_name'].get(),
+                "attachment_extension": self.vars['attachment_extension'].get(),
+                "selected_period": self.vars['selected_period'].get()
             }
             
             with open(MAIL_SEARCH_CONFIG_FILE, "w", encoding='utf-8') as f:
                 json.dump(config, f, ensure_ascii=False, indent=2)
             
-            messagebox.showinfo("Zapisano", "Ustawienia zostały zapisane.")
+            if show_message:
+                messagebox.showinfo("Zapisano", "Ustawienia zostały zapisane.")
             
         except Exception as e:
-            messagebox.showerror("Błąd", f"Błąd zapisywania ustawień: {e}")
+            if show_message:
+                messagebox.showerror("Błąd", f"Błąd zapisywania ustawień: {e}")
+            else:
+                print(f"Błąd zapisywania ustawień: {e}")
     
     def uncheck_all_exclusions(self):
         """Uncheck all folder exclusion checkboxes"""
@@ -499,4 +547,6 @@ class MailSearchTab(ttk.Frame):
         """Cleanup on destroy"""
         if self.search_engine.search_thread and self.search_engine.search_thread.is_alive():
             self.search_engine.cancel_search()
+        # Save configuration automatically when closing
+        self.save_mail_search_config(show_message=False)
         super().destroy()
