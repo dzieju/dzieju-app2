@@ -19,9 +19,43 @@ class MainWindow(tk.Tk):
         logger.log(f"Tytuł aplikacji ustawiony: {title_text}")
         self.geometry("900x600")
 
+        # Apply pastel background color
+        self.configure(bg="#FFE8E8")  # Soft pastel pink background
+        
         style = ttk.Style(self)
         style.theme_use("clam")
-        logger.log("Konfiguracja stylu GUI zakończona")
+        
+        # Configure pastel styles for notebook tabs
+        style.configure("TNotebook", background="#FFE8E8", borderwidth=0)
+        style.configure("TNotebook.Tab", 
+                       background="#E8F4FF",  # Pastel blue
+                       foreground="#333333",
+                       padding=[20, 10],
+                       borderwidth=1,
+                       relief="raised")
+        style.map("TNotebook.Tab",
+                 background=[("selected", "#FFE8F4"),  # Pastel pink when selected
+                            ("active", "#E8FFE8")],     # Pastel green on hover
+                 foreground=[("selected", "#000000")])
+        
+        # Configure pastel styles for labels
+        style.configure("TLabel",
+                       background="#FFE8E8",  # Match main window background
+                       foreground="#333333")
+        
+        # Configure pastel styles for buttons
+        style.configure("TButton",
+                       background="#E8F4FF",  # Pastel blue
+                       foreground="#333333",
+                       borderwidth=1,
+                       relief="raised",
+                       padding=[10, 5])
+        style.map("TButton",
+                 background=[("active", "#E8FFE8"),     # Pastel green on hover
+                            ("pressed", "#FFE8F4")],    # Pastel pink when pressed
+                 relief=[("pressed", "sunken")])
+        
+        logger.log("Konfiguracja stylu GUI zakończona (pastel theme)")
 
         notebook = ttk.Notebook(self)
         notebook.pack(fill="both", expand=True)
