@@ -1,12 +1,20 @@
 import tkinter as tk
 from tkinter import ttk
+from gui.tab_mail_search import MailSearchTab
+from gui.mail_config_widget import MailConfigWidget
 
 class TabPocztaIMAP(ttk.Frame):
     def __init__(self, master=None, **kwargs):
         super().__init__(master, **kwargs)
-        label = ttk.Label(
-            self,
-            text="tu będzie wyszukiwanie poczty IMAP",
-            font=("Arial", 16)
-        )
-        label.place(relx=0.5, rely=0.5, anchor=tk.CENTER)
+        
+        # Create a notebook for sub-tabs
+        notebook = ttk.Notebook(self)
+        notebook.pack(fill="both", expand=True)
+        
+        # Sub-tab: Wyszukiwanie (Search)
+        search_tab = MailSearchTab(notebook)
+        notebook.add(search_tab, text="Wyszukiwanie")
+        
+        # Sub-tab: Konfiguracja poczty (Mail Configuration)
+        config_tab = MailConfigWidget(notebook)
+        notebook.add(config_tab, text="Konfiguracja poczty")
