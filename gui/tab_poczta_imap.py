@@ -1,7 +1,7 @@
 import tkinter as tk
 from tkinter import ttk
 from gui.tab_mail_search import MailSearchTab
-from gui.mail_config_widget import MailConfigWidget
+from gui.exchange_mail_config_widget import ExchangeMailConfigWidget
 
 class TabPocztaIMAP(ttk.Frame):
     def __init__(self, master=None, **kwargs):
@@ -16,5 +16,5 @@ class TabPocztaIMAP(ttk.Frame):
         notebook.add(search_tab, text="Wyszukiwanie")
         
         # Sub-tab: Konfiguracja poczty (Mail Configuration)
-        config_tab = MailConfigWidget(notebook)
+        config_tab = ExchangeMailConfigWidget(notebook)
         notebook.add(config_tab, text="Konfiguracja poczty")
