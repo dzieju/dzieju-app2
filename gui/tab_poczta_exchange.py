@@ -4,7 +4,7 @@ Tab for Exchange mail with sub-tabs for search and configuration
 import tkinter as tk
 from tkinter import ttk
 from gui.tab_mail_search import MailSearchTab
-from gui.exchange_mail_config_widget import ExchangeMailConfigWidget
+from gui.mail_config_widget import MailConfigWidget
 
 class TabPocztaExchange(ttk.Frame):
     """
@@ -24,5 +24,5 @@ class TabPocztaExchange(ttk.Frame):
         notebook.add(search_tab, text="Wyszukiwanie")
         
         # Sub-tab: Konfiguracja poczty (Mail Configuration)
-        config_tab = ExchangeMailConfigWidget(notebook)
+        config_tab = MailConfigWidget(notebook)
         notebook.add(config_tab, text="Konfiguracja poczty")
