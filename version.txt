@@ -1,3 +1,3 @@
 Program: Ksieg-OCR
-Commit: 8fd13
-PR: 33
+Commit: 480ff
+PR: 35
