@@ -5,10 +5,10 @@ import threading
 import json
 import os
 
-from gui.mail_search_components.mail_connection import MailConnection
-from gui.mail_search_components.search_engine import EmailSearchEngine
-from gui.mail_search_components.results_display import ResultsDisplay
-from gui.mail_search_components.ui_builder import MailSearchUI
+from gui.imap_search_components.mail_connection import MailConnection
+from gui.imap_search_components.search_engine import EmailSearchEngine
+from gui.imap_search_components.results_display import ResultsDisplay
+from gui.imap_search_components.ui_builder import MailSearchUI
 
 IMAP_SEARCH_CONFIG_FILE = "imap_search_config.json"
 
@@ -60,7 +60,7 @@ class IMAPSearchTab(ttk.Frame):
         self.ui_builder = MailSearchUI(self, self.vars, self.discover_folders, self.choose_pdf_save_folder, self.clear_pdf_history, self.show_pdf_history)
         
         # Initialize PDF history manager
-        from gui.mail_search_components.pdf_history_manager import PDFHistoryManager
+        from gui.imap_search_components.pdf_history_manager import PDFHistoryManager
         self.pdf_history_manager = PDFHistoryManager()
         
         # Set PDF history manager in search engine
@@ -158,7 +158,7 @@ class IMAPSearchTab(ttk.Frame):
     def show_pdf_history(self):
         """Show PDF search history in a modal window"""
         try:
-            from gui.mail_search_components.pdf_history_display import PDFHistoryDisplayWindow
+            from gui.imap_search_components.pdf_history_display import PDFHistoryDisplayWindow
             
             # Create and show the history display window
             history_window = PDFHistoryDisplayWindow(self, self.pdf_history_manager)
@@ -201,7 +201,7 @@ class IMAPSearchTab(ttk.Frame):
                     account_type = self.connection.current_account_config.get("type", "unknown")
                     if account_type in ["imap_smtp", "pop3_smtp", "exchange"]:
                         # Show additional validation info for folder existence
-                        from gui.mail_search_components.mail_connection import FolderNameMapper
+                        from gui.imap_search_components.mail_connection import FolderNameMapper
                         server_folder = FolderNameMapper.polish_to_server(current_folder)
                         if server_folder != current_folder:
                             validation_info = f" (Mapowanie: {server_folder})"
