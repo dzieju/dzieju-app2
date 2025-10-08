@@ -257,98 +257,109 @@ class MailConnection:
     
     def get_folders_with_details(self, account_config):
         """
-        Get detailed folder information including SPECIAL-USE flags, message counts, and sizes.
-        Uses XLIST if available (Gmail), otherwise LIST with SPECIAL-USE extension.
+        Get detailed folder information for Exchange accounts.
         
         Returns: List of dicts with keys: name, flags, delimiter, message_count, size
         """
-        log("[MAIL CONNECTION] Getting folders with details (SPECIAL-USE/XLIST)")
+        account_type = account_config.get("type", "exchange")
+        log(f"[MAIL CONNECTION] Getting folders with details for account type: {account_type}")
         
-        imap = None
+        if account_type == "exchange":
+            return self._get_exchange_folders_with_details(account_config)
+        else:
+            log(f"[MAIL CONNECTION] ERROR: get_folders_with_details called with non-Exchange account type: {account_type}")
+            return []
+    
+    def _get_exchange_folders_with_details(self, account_config):
+        """
+        Get detailed folder information from Exchange account.
+        
+        Returns: List of dicts with keys: name, flags, delimiter, message_count, size
+        """
+        log("[MAIL CONNECTION] Getting Exchange folders with details")
+        
         try:
-            # Get IMAP connection
-            imap = self._get_imap_connection(account_config)
-            if not imap:
-                log("[MAIL CONNECTION] ERROR: Could not establish IMAP connection")
+            # Get Exchange account connection
+            account = self._get_exchange_connection(account_config)
+            if not account:
+                log("[MAIL CONNECTION] ERROR: Could not establish Exchange connection")
                 return []
             
             folders_info = []
             
-            # Try XLIST first (Gmail extended LIST)
+            # Get root folder (typically "Top of Information Store" or Inbox parent)
             try:
-                log("[MAIL CONNECTION] Attempting XLIST command (Gmail)")
-                xlist_folders = imap.xlist_folders()
-                folder_list = xlist_folders
-                log(f"[MAIL CONNECTION] XLIST successful, got {len(folder_list)} folders")
-            except:
-                # Fallback to regular LIST
-                log("[MAIL CONNECTION] XLIST not supported, using regular LIST")
-                folder_list = imap.list_folders()
+                root_folder = account.root
+                log(f"[MAIL CONNECTION] Starting from root folder: {root_folder.name}")
+            except Exception as root_error:
+                log(f"[MAIL CONNECTION] Could not access root folder, using inbox parent: {root_error}")
+                root_folder = account.inbox.parent
             
-            for folder_data in folder_list:
-                if folder_data:
+            # Get all folders recursively
+            all_folders = self._get_all_subfolders_recursive(root_folder, set())
+            
+            # Include root and well-known folders
+            well_known = [account.inbox, account.sent, account.drafts, account.trash]
+            for folder in well_known:
+                if folder and folder not in all_folders:
+                    all_folders.insert(0, folder)
+            
+            log(f"[MAIL CONNECTION] Processing {len(all_folders)} Exchange folders")
+            
+            for folder in all_folders:
+                try:
+                    # Get folder properties
+                    folder_name = folder.name
+                    message_count = 0
+                    estimated_size = 0
+                    
+                    # Try to get message count and size
                     try:
-                        flags, delimiter, folder_name = folder_data
-                        
-                        # Decode folder name if bytes
-                        if isinstance(folder_name, bytes):
-                            folder_name = folder_name.decode('utf-8')
-                        
-                        folder_name = folder_name.strip()
-                        
-                        if not folder_name:
-                            continue
-                        
-                        # Get folder status (message count)
-                        message_count = 0
-                        estimated_size = 0
-                        
-                        try:
-                            # Select folder to get accurate count
-                            imap.select_folder(folder_name, readonly=True)
-                            
-                            # Get folder status
-                            status = imap.folder_status(folder_name, ['MESSAGES', 'UIDVALIDITY'])
-                            message_count = status.get(b'MESSAGES', 0)
-                            
-                            # Approximate size (IMAP doesn't provide total size easily)
-                            # Estimate: 150KB per message on average (accounts for attachments)
-                            # This is a reasonable middle ground between plain text (~10KB) and 
-                            # messages with attachments (~300KB+)
-                            estimated_size = message_count * 150 * 1024
-                            
-                        except Exception as status_error:
-                            log(f"[MAIL CONNECTION] Could not get status for folder '{folder_name}': {status_error}")
-                        
-                        folder_info = {
-                            'name': folder_name,
-                            'flags': flags,
-                            'delimiter': delimiter if delimiter else '/',
-                            'message_count': message_count,
-                            'size': estimated_size
-                        }
-                        
-                        folders_info.append(folder_info)
-                        log(f"[MAIL CONNECTION] Folder '{folder_name}': {message_count} messages, flags={flags}")
-                        
-                    except Exception as folder_error:
-                        log(f"[MAIL CONNECTION] Error processing folder: {folder_error}")
-                        continue
+                        message_count = folder.total_count
+                        # Estimate size based on message count
+                        # Exchange: 150KB per message average (similar to IMAP)
+                        estimated_size = message_count * 150 * 1024
+                    except Exception as count_error:
+                        log(f"[MAIL CONNECTION] Could not get count for folder '{folder_name}': {count_error}")
+                    
+                    # Exchange folders don't have IMAP-style flags, but we can identify special folders
+                    flags = []
+                    folder_class = getattr(folder, 'folder_class', None)
+                    if folder_class:
+                        # Map Exchange folder classes to IMAP-style flags for consistency
+                        if 'IPF.Note' in folder_class:
+                            if folder == account.inbox:
+                                flags = ['\\Inbox']
+                            elif folder == account.sent:
+                                flags = ['\\Sent']
+                            elif folder == account.drafts:
+                                flags = ['\\Drafts']
+                            elif folder == account.trash:
+                                flags = ['\\Trash']
+                            elif folder == account.junk:
+                                flags = ['\\Junk']
+                    
+                    folder_info = {
+                        'name': folder_name,
+                        'flags': flags,
+                        'delimiter': '/',
+                        'message_count': message_count,
+                        'size': estimated_size
+                    }
+                    
+                    folders_info.append(folder_info)
+                    log(f"[MAIL CONNECTION] Folder '{folder_name}': {message_count} messages, est. size: {estimated_size} bytes")
+                    
+                except Exception as folder_error:
+                    log(f"[MAIL CONNECTION] Error processing Exchange folder: {folder_error}")
+                    continue
             
-            log(f"[MAIL CONNECTION] Successfully retrieved {len(folders_info)} folders with details")
+            log(f"[MAIL CONNECTION] Successfully retrieved {len(folders_info)} Exchange folders with details")
             return folders_info
             
         except Exception as e:
-            log(f"[MAIL CONNECTION] ERROR getting folders with details: {str(e)}")
+            log(f"[MAIL CONNECTION] ERROR getting Exchange folders with details: {str(e)}")
             return []
-        finally:
-            # Close temporary connection if needed
-            if imap and imap != self.imap_connection:
-                try:
-                    imap.logout()
-                    log("[MAIL CONNECTION] Closed temporary IMAP connection")
-                except:
-                    pass
     
     def load_exchange_mail_config(self):
         """Load Exchange mail configuration from exchange_mail_config.json"""
