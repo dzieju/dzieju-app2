@@ -1,0 +1,13 @@
+{
+  "accounts": [
+    {
+      "name": "grzegorz.ciekot@woox.pl",
+      "email": "grzegorz.ciekot@woox.pl",
+      "username": "grzegorz.ciekot@woox.pl",
+      "password": "g503784221Ola",
+      "exchange_server": "ex3.mail.ovh.net",
+      "domain": ""
+    }
+  ],
+  "main_account_index": 0
+}
