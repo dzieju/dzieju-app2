@@ -26,19 +26,20 @@ class FolderInfo:
             return None
         
         flag_str = ' '.join(str(f) for f in self.flags).upper()
+        name_upper = self.name.upper()
         
         # SPECIAL-USE flags (RFC 6154)
-        if '\\INBOX' in flag_str or self.name.upper() == 'INBOX':
+        if '\\INBOX' in flag_str or name_upper == 'INBOX':
             return 'inbox'
-        elif '\\SENT' in flag_str or 'SENT' in self.name.upper():
+        elif '\\SENT' in flag_str or 'SENT' in name_upper:
             return 'sent'
-        elif '\\DRAFTS' in flag_str or 'DRAFT' in self.name.upper():
+        elif '\\DRAFTS' in flag_str or 'DRAFT' in name_upper:
             return 'drafts'
-        elif '\\TRASH' in flag_str or 'TRASH' in self.name.upper():
+        elif '\\TRASH' in flag_str or 'TRASH' in name_upper or 'DELETED' in name_upper:
             return 'trash'
-        elif '\\JUNK' in flag_str or 'SPAM' in self.name.upper() or 'JUNK' in self.name.upper():
+        elif '\\JUNK' in flag_str or 'SPAM' in name_upper or 'JUNK' in name_upper:
             return 'spam'
-        elif '\\ARCHIVE' in flag_str or 'ARCHIVE' in self.name.upper():
+        elif '\\ARCHIVE' in flag_str or 'ARCHIVE' in name_upper:
             return 'archive'
         
         return None
