@@ -1,5 +1,5 @@
 """
-IMAP Folder Browser Component
+Exchange Folder Browser Component
 Displays folder hierarchy with icons, message counts, and sizes
 """
 import tkinter as tk
@@ -101,7 +101,7 @@ class FolderInfo:
 
 class FolderBrowser(ttk.Frame):
     """
-    IMAP Folder Browser with tree view
+    Exchange Folder Browser with tree view
     Displays folders with icons, message counts, and sizes
     """
     
@@ -119,7 +119,7 @@ class FolderBrowser(ttk.Frame):
         control_frame = ttk.Frame(self)
         control_frame.pack(fill='x', padx=5, pady=5)
         
-        ttk.Label(control_frame, text="Foldery IMAP", font=('Arial', 12, 'bold')).pack(side='left', padx=5)
+        ttk.Label(control_frame, text="Foldery Exchange", font=('Arial', 12, 'bold')).pack(side='left', padx=5)
         
         self.refresh_button = ttk.Button(control_frame, text="🔄 Odśwież foldery", command=self.refresh_folders)
         self.refresh_button.pack(side='right', padx=5)
@@ -180,11 +180,11 @@ class FolderBrowser(ttk.Frame):
     def _refresh_folders_thread(self):
         """Background thread for folder refresh"""
         try:
-            # Get IMAP account
-            account = self.mail_connection.get_imap_account()
+            # Get Exchange account
+            account = self.mail_connection.get_exchange_account()
             
             if not account:
-                self.after_idle(lambda: self._show_error("Brak konta IMAP/POP3 - skonfiguruj konto w zakładce 'Konfiguracja poczty'"))
+                self.after_idle(lambda: self._show_error("Brak konta Exchange - skonfiguruj konto w zakładce 'Konfiguracja poczty'"))
                 return
             
             # Get account config
@@ -196,7 +196,7 @@ class FolderBrowser(ttk.Frame):
             account_name = account_config.get('name', 'Unknown')
             account_email = account_config.get('email', '')
             
-            log(f"[FOLDER BROWSER] Refreshing folders for account: {account_name} ({account_email})")
+            log(f"[FOLDER BROWSER] Refreshing folders for Exchange account: {account_name} ({account_email})")
             
             # Update account label
             self.after_idle(lambda: self.account_label.config(
@@ -208,7 +208,7 @@ class FolderBrowser(ttk.Frame):
             folders_data = self.mail_connection.get_folders_with_details(account_config)
             
             if not folders_data:
-                self.after_idle(lambda: self._show_error("Nie można pobrać listy folderów z serwera"))
+                self.after_idle(lambda: self._show_error("Nie można pobrać listy folderów z serwera Exchange"))
                 return
             
             folders_info = []
@@ -234,13 +234,13 @@ class FolderBrowser(ttk.Frame):
             # Update UI
             self.after_idle(lambda: self._update_tree(folders_info))
             self.after_idle(lambda: self.status_label.config(
-                text=f"Znaleziono {len(folders_info)} folderów",
+                text=f"Znaleziono {len(folders_info)} folderów Exchange",
                 foreground='green'
             ))
             
         except Exception as e:
-            log(f"[FOLDER BROWSER] Error refreshing folders: {e}")
-            self.after_idle(lambda: self._show_error(f"Błąd pobierania folderów: {str(e)}"))
+            log(f"[FOLDER BROWSER] Error refreshing Exchange folders: {e}")
+            self.after_idle(lambda: self._show_error(f"Błąd pobierania folderów Exchange: {str(e)}"))
         finally:
             self.after_idle(lambda: self.refresh_button.config(state='normal'))
     
