@@ -2,6 +2,7 @@ import tkinter as tk
 from tkinter import ttk
 from gui.tab_imap_search import IMAPSearchTab
 from gui.tab_imap_config import IMAPConfigWidget
+from gui.tab_imap_folders import IMAPFoldersTab
 
 class TabPocztaIMAP(ttk.Frame):
     def __init__(self, master=None, **kwargs):
@@ -10,6 +11,10 @@ class TabPocztaIMAP(ttk.Frame):
         # Create a notebook for sub-tabs
         self.notebook = ttk.Notebook(self)
         self.notebook.pack(fill="both", expand=True)
+        
+        # Sub-tab: Foldery (Folder Browser) - NEW
+        self.folders_tab = IMAPFoldersTab(self.notebook)
+        self.notebook.add(self.folders_tab, text="Foldery")
         
         # Sub-tab: Wyszukiwanie (Search)
         self.search_tab = IMAPSearchTab(self.notebook)

@@ -255,6 +255,99 @@ class MailConnection:
         log("[MAIL CONNECTION] No IMAP/POP3 accounts found in configuration")
         return None
     
+    def get_folders_with_details(self, account_config):
+        """
+        Get detailed folder information including SPECIAL-USE flags, message counts, and sizes.
+        Uses XLIST if available (Gmail), otherwise LIST with SPECIAL-USE extension.
+        
+        Returns: List of dicts with keys: name, flags, delimiter, message_count, size
+        """
+        log("[MAIL CONNECTION] Getting folders with details (SPECIAL-USE/XLIST)")
+        
+        imap = None
+        try:
+            # Get IMAP connection
+            imap = self._get_imap_connection(account_config)
+            if not imap:
+                log("[MAIL CONNECTION] ERROR: Could not establish IMAP connection")
+                return []
+            
+            folders_info = []
+            
+            # Try XLIST first (Gmail extended LIST)
+            try:
+                log("[MAIL CONNECTION] Attempting XLIST command (Gmail)")
+                xlist_folders = imap.xlist_folders()
+                folder_list = xlist_folders
+                log(f"[MAIL CONNECTION] XLIST successful, got {len(folder_list)} folders")
+            except:
+                # Fallback to regular LIST
+                log("[MAIL CONNECTION] XLIST not supported, using regular LIST")
+                folder_list = imap.list_folders()
+            
+            for folder_data in folder_list:
+                if folder_data:
+                    try:
+                        flags, delimiter, folder_name = folder_data
+                        
+                        # Decode folder name if bytes
+                        if isinstance(folder_name, bytes):
+                            folder_name = folder_name.decode('utf-8')
+                        
+                        folder_name = folder_name.strip()
+                        
+                        if not folder_name:
+                            continue
+                        
+                        # Get folder status (message count)
+                        message_count = 0
+                        estimated_size = 0
+                        
+                        try:
+                            # Select folder to get accurate count
+                            imap.select_folder(folder_name, readonly=True)
+                            
+                            # Get folder status
+                            status = imap.folder_status(folder_name, ['MESSAGES', 'UIDVALIDITY'])
+                            message_count = status.get(b'MESSAGES', 0)
+                            
+                            # Approximate size (IMAP doesn't provide total size easily)
+                            # Estimate: 50KB per message on average
+                            estimated_size = message_count * 50 * 1024
+                            
+                        except Exception as status_error:
+                            log(f"[MAIL CONNECTION] Could not get status for folder '{folder_name}': {status_error}")
+                        
+                        folder_info = {
+                            'name': folder_name,
+                            'flags': flags,
+                            'delimiter': delimiter if delimiter else '/',
+                            'message_count': message_count,
+                            'size': estimated_size
+                        }
+                        
+                        folders_info.append(folder_info)
+                        log(f"[MAIL CONNECTION] Folder '{folder_name}': {message_count} messages, flags={flags}")
+                        
+                    except Exception as folder_error:
+                        log(f"[MAIL CONNECTION] Error processing folder: {folder_error}")
+                        continue
+            
+            log(f"[MAIL CONNECTION] Successfully retrieved {len(folders_info)} folders with details")
+            return folders_info
+            
+        except Exception as e:
+            log(f"[MAIL CONNECTION] ERROR getting folders with details: {str(e)}")
+            return []
+        finally:
+            # Close temporary connection if needed
+            if imap and imap != self.imap_connection:
+                try:
+                    imap.logout()
+                    log("[MAIL CONNECTION] Closed temporary IMAP connection")
+                except:
+                    pass
+    
     def load_exchange_mail_config(self):
         """Load Exchange mail configuration from exchange_mail_config.json"""
         try:
