@@ -763,15 +763,25 @@ class MailConnection:
     def _get_exchange_available_folders(self, account, folder_path):
         """Get available Exchange folders for exclusion"""
         try:
-            folder = self.get_folder_by_path(account, folder_path)
-            if not folder:
-                log("[MAIL CONNECTION] ERROR: Could not access Exchange folder for discovery")
-                return self._get_fallback_folders()
-            
-            log(f"[MAIL CONNECTION] Starting Exchange folder discovery from: '{folder.name}'")
+            # Start from root folder to discover ALL folders, not just subfolders of specified path
+            # This ensures system folders (Sent Items, Drafts, etc.) are included
+            try:
+                root_folder = account.root
+                log(f"[MAIL CONNECTION] Starting Exchange folder discovery from root: '{root_folder.name}'")
+            except Exception as root_error:
+                log(f"[MAIL CONNECTION] Could not access root folder, using inbox parent: {root_error}")
+                try:
+                    root_folder = account.inbox.parent
+                    log(f"[MAIL CONNECTION] Using inbox parent: '{root_folder.name}'")
+                except Exception as parent_error:
+                    log(f"[MAIL CONNECTION] Could not access inbox parent, falling back to specified path: {parent_error}")
+                    root_folder = self.get_folder_by_path(account, folder_path)
+                    if not root_folder:
+                        log("[MAIL CONNECTION] ERROR: Could not access any folder for discovery")
+                        return self._get_fallback_folders()
             
             # Get all subfolders recursively (without exclusions since we want to show all as options)
-            all_subfolders = self._get_all_subfolders_recursive(folder, set())
+            all_subfolders = self._get_all_subfolders_recursive(root_folder, set())
             
             # Extract folder names from folder objects
             folder_names = [subfolder.name for subfolder in all_subfolders]
