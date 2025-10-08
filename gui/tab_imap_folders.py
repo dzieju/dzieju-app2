@@ -4,8 +4,8 @@ Displays IMAP folder structure with icons, message counts, and sizes
 """
 import tkinter as tk
 from tkinter import ttk
-from gui.mail_search_components.folder_browser import FolderBrowser
-from gui.mail_search_components.mail_connection import MailConnection
+from gui.imap_search_components.folder_browser import FolderBrowser
+from gui.imap_search_components.mail_connection import MailConnection
 
 
 class IMAPFoldersTab(ttk.Frame):
