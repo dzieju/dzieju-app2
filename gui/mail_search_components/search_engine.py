@@ -167,9 +167,10 @@ class EmailSearchEngine:
             account_type = connection.current_account_config.get("type", "unknown")
             log(f"Account type from configuration: {account_type}")
             
-            # Get the account connection using the appropriate method based on account type
+            # Get the account connection object from the connection
+            # Exchange uses connection.account, IMAP/POP3 use connection.imap_connection or connection.pop3_connection
             if account_type == "exchange":
-                account = connection.exchange_connection
+                account = connection.account
             elif account_type in ["imap_smtp", "pop3_smtp"]:
                 account = connection.imap_connection or connection.pop3_connection
             else:
