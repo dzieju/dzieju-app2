@@ -689,16 +689,9 @@ class MailConnection:
         # Enhanced validation and logging
         if not self.current_account_config:
             log("[MAIL CONNECTION] ERROR: No account configuration available for folder discovery")
-            log("[MAIL CONNECTION] Attempting to load main account configuration...")
-            # Try to load the account if not already loaded
-            try:
-                account = self.get_main_account() 
-                if not account:
-                    log("[MAIL CONNECTION] Could not load main account")
-                    return self._get_fallback_folders()
-            except Exception as e:
-                log(f"[MAIL CONNECTION] Error loading main account: {str(e)}")
-                return self._get_fallback_folders()
+            log("[MAIL CONNECTION] Account must be configured before calling this method")
+            # Return fallback folders instead of trying to load wrong account type
+            return self._get_fallback_folders()
         
         account_type = self.current_account_config.get("type", "unknown")
         account_name = self.current_account_config.get("name", "Unknown Account")

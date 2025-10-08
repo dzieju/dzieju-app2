@@ -334,6 +334,21 @@ class ExchangeSearchTab(ttk.Frame):
         
         # Update excluded_folders from checkboxes before search
         self.vars['excluded_folders'].set(self._get_excluded_folders_from_checkboxes())
+        
+        # Establish Exchange account connection before search
+        # This sets connection.current_account_config with the Exchange account
+        try:
+            account = self.connection.get_exchange_account()
+            if not account:
+                self._add_result({'type': 'search_error', 'error': 'Nie można połączyć z kontem Exchange. Sprawdź konfigurację.'})
+                self.search_button.config(text="Rozpocznij wyszukiwanie")
+                self.status_label.config(text="Błąd połączenia", foreground="red")
+                return
+        except Exception as e:
+            self._add_result({'type': 'search_error', 'error': f'Błąd połączenia z kontem Exchange: {str(e)}'})
+            self.search_button.config(text="Rozpocznij wyszukiwanie")
+            self.status_label.config(text="Błąd połączenia", foreground="red")
+            return
 
         threading.Thread(target=self._perform_search, daemon=True).start()
     

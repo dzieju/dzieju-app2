@@ -157,24 +157,31 @@ class EmailSearchEngine:
             log(f"Parametry wyszukiwania: {search_params}")
             log(f"Paginacja: strona {page}, na stronie {per_page}")
             
-            # Get account for folder operations and determine account type
-            account = connection.get_main_account()
+            # Get account for folder operations - use existing connection configuration
+            # The calling tab should have already configured the connection with the correct account
+            if not connection.current_account_config:
+                log("BŁĄD: Brak skonfigurowanego konta pocztowego")
+                raise Exception("Brak skonfigurowanego konta pocztowego. Skonfiguruj konto w zakładce Konfiguracja poczty.")
+            
+            # Get account type from current configuration
+            account_type = connection.current_account_config.get("type", "unknown")
+            log(f"Account type from configuration: {account_type}")
+            
+            # Get the account connection object from the connection
+            # Exchange uses connection.account, IMAP/POP3 use connection.imap_connection or connection.pop3_connection
+            if account_type == "exchange":
+                account = connection.account
+            elif account_type in ["imap_smtp", "pop3_smtp"]:
+                account = connection.imap_connection or connection.pop3_connection
+            else:
+                log(f"BŁĄD: Nieznany typ konta: {account_type}")
+                raise Exception(f"Nieznany typ konta: {account_type}")
+            
             if not account:
                 log("BŁĄD: Nie można nawiązać połączenia z serwerem poczty")
                 raise Exception("Nie można nawiązać połączenia z serwerem poczty")
             
-            # Determine account type for universal handling
-            account_type = "unknown"
-            if connection.current_account_config:
-                account_type = connection.current_account_config.get("type", "unknown")
-            else:
-                # Try to detect account type from account object
-                if hasattr(account, 'primary_smtp_address'):
-                    account_type = "exchange"
-                else:
-                    account_type = "imap_smtp"  # Default for non-Exchange
-            
-            log(f"Detected account type: {account_type}")
+            log(f"Using account type: {account_type}")
             
             # Enhanced account and folder context logging
             if connection.current_account_config:
