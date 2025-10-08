@@ -1,0 +1,310 @@
+"""
+IMAP Folder Browser Component
+Displays folder hierarchy with icons, message counts, and sizes
+"""
+import tkinter as tk
+from tkinter import ttk, messagebox
+import threading
+from tools.logger import log
+
+
+class FolderInfo:
+    """Container for folder information"""
+    def __init__(self, name, display_name, message_count=0, size=0, flags=None, delimiter='/'):
+        self.name = name
+        self.display_name = display_name
+        self.message_count = message_count
+        self.size = size
+        self.flags = flags or []
+        self.delimiter = delimiter
+        self.is_special = self._detect_special_folder()
+        self.icon = self._get_icon()
+    
+    def _detect_special_folder(self):
+        """Detect if this is a special folder based on flags"""
+        if not self.flags:
+            return None
+        
+        flag_str = ' '.join(str(f) for f in self.flags).upper()
+        name_upper = self.name.upper()
+        
+        # SPECIAL-USE flags (RFC 6154)
+        if '\\INBOX' in flag_str or name_upper == 'INBOX':
+            return 'inbox'
+        elif '\\SENT' in flag_str or 'SENT' in name_upper:
+            return 'sent'
+        elif '\\DRAFTS' in flag_str or 'DRAFT' in name_upper:
+            return 'drafts'
+        elif '\\TRASH' in flag_str or 'TRASH' in name_upper or 'DELETED' in name_upper:
+            return 'trash'
+        elif '\\JUNK' in flag_str or 'SPAM' in name_upper or 'JUNK' in name_upper:
+            return 'spam'
+        elif '\\ARCHIVE' in flag_str or 'ARCHIVE' in name_upper:
+            return 'archive'
+        
+        return None
+    
+    def _get_icon(self):
+        """Get icon/emoji for folder type"""
+        if self.is_special == 'inbox':
+            return '📥'
+        elif self.is_special == 'sent':
+            return '📤'
+        elif self.is_special == 'drafts':
+            return '📝'
+        elif self.is_special == 'trash':
+            return '🗑️'
+        elif self.is_special == 'spam':
+            return '⚠️'
+        elif self.is_special == 'archive':
+            return '📦'
+        else:
+            return '📁'
+    
+    def get_display_name_polish(self):
+        """Get Polish display name for system folders"""
+        if self.is_special == 'inbox':
+            return 'Odebrane'
+        elif self.is_special == 'sent':
+            return 'Wysłane'
+        elif self.is_special == 'drafts':
+            return 'Szkice'
+        elif self.is_special == 'trash':
+            return 'Kosz'
+        elif self.is_special == 'spam':
+            return 'Spam'
+        elif self.is_special == 'archive':
+            return 'Archiwum'
+        else:
+            return self.display_name
+    
+    def format_size(self):
+        """Format size in human-readable format"""
+        if self.size == 0:
+            return "0 B"
+        
+        units = ['B', 'KB', 'MB', 'GB', 'TB']
+        size = float(self.size)
+        unit_index = 0
+        
+        while size >= 1024.0 and unit_index < len(units) - 1:
+            size /= 1024.0
+            unit_index += 1
+        
+        if unit_index == 0:
+            return f"{int(size)} {units[unit_index]}"
+        else:
+            return f"{size:.1f} {units[unit_index]}"
+
+
+class FolderBrowser(ttk.Frame):
+    """
+    IMAP Folder Browser with tree view
+    Displays folders with icons, message counts, and sizes
+    """
+    
+    def __init__(self, parent, mail_connection):
+        super().__init__(parent)
+        self.mail_connection = mail_connection
+        self.folders = []
+        self.folder_map = {}  # Map folder names to FolderInfo objects
+        
+        self.create_widgets()
+    
+    def create_widgets(self):
+        """Create the folder browser UI"""
+        # Top control panel
+        control_frame = ttk.Frame(self)
+        control_frame.pack(fill='x', padx=5, pady=5)
+        
+        ttk.Label(control_frame, text="Foldery IMAP", font=('Arial', 12, 'bold')).pack(side='left', padx=5)
+        
+        self.refresh_button = ttk.Button(control_frame, text="🔄 Odśwież foldery", command=self.refresh_folders)
+        self.refresh_button.pack(side='right', padx=5)
+        
+        # Account info label
+        self.account_label = ttk.Label(control_frame, text="Konto: nie połączono", foreground='gray')
+        self.account_label.pack(side='right', padx=10)
+        
+        # Status label
+        self.status_label = ttk.Label(self, text="Kliknij 'Odśwież foldery' aby pobrać listę folderów", foreground='gray')
+        self.status_label.pack(fill='x', padx=5, pady=2)
+        
+        # Create treeview with columns
+        tree_frame = ttk.Frame(self)
+        tree_frame.pack(fill='both', expand=True, padx=5, pady=5)
+        
+        # Add scrollbars
+        vsb = ttk.Scrollbar(tree_frame, orient="vertical")
+        hsb = ttk.Scrollbar(tree_frame, orient="horizontal")
+        
+        # Create treeview
+        self.tree = ttk.Treeview(tree_frame, 
+                                  columns=('messages', 'size'),
+                                  yscrollcommand=vsb.set,
+                                  xscrollcommand=hsb.set,
+                                  selectmode='browse')
+        
+        vsb.config(command=self.tree.yview)
+        hsb.config(command=self.tree.xview)
+        
+        # Grid layout
+        self.tree.grid(row=0, column=0, sticky='nsew')
+        vsb.grid(row=0, column=1, sticky='ns')
+        hsb.grid(row=1, column=0, sticky='ew')
+        
+        tree_frame.grid_rowconfigure(0, weight=1)
+        tree_frame.grid_columnconfigure(0, weight=1)
+        
+        # Configure columns
+        self.tree.heading('#0', text='Nazwa folderu', anchor='w')
+        self.tree.heading('messages', text='Wiadomości', anchor='e')
+        self.tree.heading('size', text='Rozmiar', anchor='e')
+        
+        self.tree.column('#0', width=300, minwidth=200)
+        self.tree.column('messages', width=120, minwidth=80, anchor='e')
+        self.tree.column('size', width=120, minwidth=80, anchor='e')
+        
+        # Bind double-click event
+        self.tree.bind('<Double-1>', self.on_folder_double_click)
+    
+    def refresh_folders(self):
+        """Refresh folder list in background thread"""
+        self.refresh_button.config(state='disabled')
+        self.status_label.config(text="Pobieranie listy folderów...", foreground='blue')
+        
+        threading.Thread(target=self._refresh_folders_thread, daemon=True).start()
+    
+    def _refresh_folders_thread(self):
+        """Background thread for folder refresh"""
+        try:
+            # Get IMAP account
+            account = self.mail_connection.get_imap_account()
+            
+            if not account:
+                self.after_idle(lambda: self._show_error("Brak konta IMAP/POP3 - skonfiguruj konto w zakładce 'Konfiguracja poczty'"))
+                return
+            
+            # Get account config
+            account_config = self.mail_connection.current_account_config
+            if not account_config:
+                self.after_idle(lambda: self._show_error("Brak konfiguracji konta"))
+                return
+            
+            account_name = account_config.get('name', 'Unknown')
+            account_email = account_config.get('email', '')
+            
+            log(f"[FOLDER BROWSER] Refreshing folders for account: {account_name} ({account_email})")
+            
+            # Update account label
+            self.after_idle(lambda: self.account_label.config(
+                text=f"Konto: {account_name} ({account_email})",
+                foreground='black'
+            ))
+            
+            # Use the enhanced method to get folders with details
+            folders_data = self.mail_connection.get_folders_with_details(account_config)
+            
+            if not folders_data:
+                self.after_idle(lambda: self._show_error("Nie można pobrać listy folderów z serwera"))
+                return
+            
+            folders_info = []
+            
+            for folder_data in folders_data:
+                try:
+                    # Create FolderInfo object from the data
+                    folder_info = FolderInfo(
+                        name=folder_data['name'],
+                        display_name=folder_data['name'],
+                        message_count=folder_data['message_count'],
+                        size=folder_data['size'],
+                        flags=folder_data['flags'],
+                        delimiter=folder_data['delimiter']
+                    )
+                    
+                    folders_info.append(folder_info)
+                    
+                except Exception as folder_error:
+                    log(f"[FOLDER BROWSER] Error processing folder data: {folder_error}")
+                    continue
+            
+            # Update UI
+            self.after_idle(lambda: self._update_tree(folders_info))
+            self.after_idle(lambda: self.status_label.config(
+                text=f"Znaleziono {len(folders_info)} folderów",
+                foreground='green'
+            ))
+            
+        except Exception as e:
+            log(f"[FOLDER BROWSER] Error refreshing folders: {e}")
+            self.after_idle(lambda: self._show_error(f"Błąd pobierania folderów: {str(e)}"))
+        finally:
+            self.after_idle(lambda: self.refresh_button.config(state='normal'))
+    
+    def _update_tree(self, folders_info):
+        """Update tree view with folder information"""
+        # Clear existing items
+        for item in self.tree.get_children():
+            self.tree.delete(item)
+        
+        self.folder_map = {}
+        
+        # Sort folders: system folders first, then alphabetically
+        system_folders = [f for f in folders_info if f.is_special]
+        custom_folders = [f for f in folders_info if not f.is_special]
+        
+        # Sort system folders by predefined order
+        system_order = ['inbox', 'drafts', 'sent', 'spam', 'trash', 'archive']
+        system_folders.sort(key=lambda f: system_order.index(f.is_special) if f.is_special in system_order else 999)
+        
+        # Sort custom folders alphabetically
+        custom_folders.sort(key=lambda f: f.name.lower())
+        
+        sorted_folders = system_folders + custom_folders
+        
+        # Build folder hierarchy
+        for folder in sorted_folders:
+            # Check if folder has parent (contains delimiter)
+            if folder.delimiter and folder.delimiter in folder.name:
+                # Hierarchical folder - we'll implement simple version for now
+                # For full hierarchy, we'd need to build a tree structure
+                parts = folder.name.split(folder.delimiter)
+                indent = '  ' * (len(parts) - 1)
+                display_name = f"{indent}{folder.icon} {folder.get_display_name_polish()}"
+            else:
+                display_name = f"{folder.icon} {folder.get_display_name_polish()}"
+            
+            # Insert into tree
+            item_id = self.tree.insert('', 'end', 
+                                       text=display_name,
+                                       values=(
+                                           f"{folder.message_count:,}",
+                                           folder.format_size()
+                                       ),
+                                       tags=(folder.name,))
+            
+            self.folder_map[item_id] = folder
+    
+    def _show_error(self, message):
+        """Show error message"""
+        self.status_label.config(text=message, foreground='red')
+        self.refresh_button.config(state='normal')
+    
+    def on_folder_double_click(self, event):
+        """Handle double-click on folder"""
+        selection = self.tree.selection()
+        if not selection:
+            return
+        
+        item_id = selection[0]
+        if item_id in self.folder_map:
+            folder = self.folder_map[item_id]
+            messagebox.showinfo(
+                "Informacje o folderze",
+                f"Folder: {folder.get_display_name_polish()}\n"
+                f"Ścieżka: {folder.name}\n"
+                f"Liczba wiadomości: {folder.message_count:,}\n"
+                f"Szacowany rozmiar: {folder.format_size()}\n"
+                f"Typ: {'Systemowy' if folder.is_special else 'Własny'}"
+            )
