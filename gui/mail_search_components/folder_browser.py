@@ -21,25 +21,27 @@ class FolderInfo:
         self.icon = self._get_icon()
     
     def _detect_special_folder(self):
-        """Detect if this is a special folder based on flags"""
-        if not self.flags:
-            return None
-        
-        flag_str = ' '.join(str(f) for f in self.flags).upper()
+        """Detect if this is a special folder based on flags and name"""
+        # Build flag string (empty if no flags)
+        flag_str = ' '.join(str(f) for f in self.flags).upper() if self.flags else ''
         name_upper = self.name.upper()
         
-        # SPECIAL-USE flags (RFC 6154)
-        if '\\INBOX' in flag_str or name_upper == 'INBOX':
+        # Extract last part of folder path for better detection
+        # e.g., "recepcja@woox.pl/Odebrane" -> "ODEBRANE"
+        folder_basename = name_upper.split('/')[-1].split('.')[-1]
+        
+        # SPECIAL-USE flags (RFC 6154) OR name-based detection (English and Polish)
+        if '\\INBOX' in flag_str or name_upper == 'INBOX' or folder_basename == 'ODEBRANE':
             return 'inbox'
-        elif '\\SENT' in flag_str or 'SENT' in name_upper:
+        elif '\\SENT' in flag_str or 'SENT' in name_upper or folder_basename in ('WYSLANE', 'WYSŁANE', 'SENT ITEMS'):
             return 'sent'
-        elif '\\DRAFTS' in flag_str or 'DRAFT' in name_upper:
+        elif '\\DRAFTS' in flag_str or 'DRAFT' in name_upper or folder_basename == 'SZKICE':
             return 'drafts'
-        elif '\\TRASH' in flag_str or 'TRASH' in name_upper or 'DELETED' in name_upper:
+        elif '\\TRASH' in flag_str or 'TRASH' in name_upper or 'DELETED' in name_upper or folder_basename == 'KOSZ':
             return 'trash'
         elif '\\JUNK' in flag_str or 'SPAM' in name_upper or 'JUNK' in name_upper:
             return 'spam'
-        elif '\\ARCHIVE' in flag_str or 'ARCHIVE' in name_upper:
+        elif '\\ARCHIVE' in flag_str or 'ARCHIVE' in name_upper or folder_basename == 'ARCHIWUM':
             return 'archive'
         
         return None
@@ -243,7 +245,7 @@ class FolderBrowser(ttk.Frame):
             self.after_idle(lambda: self.refresh_button.config(state='normal'))
     
     def _update_tree(self, folders_info):
-        """Update tree view with folder information"""
+        """Update tree view with folder information using proper hierarchy"""
         # Clear existing items
         for item in self.tree.get_children():
             self.tree.delete(item)
@@ -261,22 +263,44 @@ class FolderBrowser(ttk.Frame):
         # Sort custom folders alphabetically
         custom_folders.sort(key=lambda f: f.name.lower())
         
-        sorted_folders = system_folders + custom_folders
+        # Build hierarchical structure
+        # Map of folder paths to tree item IDs for parent lookup
+        path_to_item = {}
         
-        # Build folder hierarchy
-        for folder in sorted_folders:
+        # Process system folders first (always at root level)
+        for folder in system_folders:
+            display_name = f"{folder.icon} {folder.get_display_name_polish()}"
+            item_id = self.tree.insert('', 'end', 
+                                       text=display_name,
+                                       values=(
+                                           f"{folder.message_count:,}",
+                                           folder.format_size()
+                                       ),
+                                       tags=(folder.name,))
+            self.folder_map[item_id] = folder
+            path_to_item[folder.name] = item_id
+        
+        # Process custom folders with hierarchy support
+        for folder in custom_folders:
+            parent_id = ''
+            
             # Check if folder has parent (contains delimiter)
             if folder.delimiter and folder.delimiter in folder.name:
-                # Hierarchical folder - we'll implement simple version for now
-                # For full hierarchy, we'd need to build a tree structure
                 parts = folder.name.split(folder.delimiter)
-                indent = '  ' * (len(parts) - 1)
-                display_name = f"{indent}{folder.icon} {folder.get_display_name_polish()}"
+                # Look for parent folder
+                parent_path = folder.delimiter.join(parts[:-1])
+                if parent_path in path_to_item:
+                    parent_id = path_to_item[parent_path]
+            
+            # Get display name (just the last part for hierarchical folders)
+            if folder.delimiter and folder.delimiter in folder.name:
+                parts = folder.name.split(folder.delimiter)
+                display_name = f"{folder.icon} {parts[-1]}"
             else:
                 display_name = f"{folder.icon} {folder.get_display_name_polish()}"
             
             # Insert into tree
-            item_id = self.tree.insert('', 'end', 
+            item_id = self.tree.insert(parent_id, 'end', 
                                        text=display_name,
                                        values=(
                                            f"{folder.message_count:,}",
@@ -285,6 +309,7 @@ class FolderBrowser(ttk.Frame):
                                        tags=(folder.name,))
             
             self.folder_map[item_id] = folder
+            path_to_item[folder.name] = item_id
     
     def _show_error(self, message):
         """Show error message"""
