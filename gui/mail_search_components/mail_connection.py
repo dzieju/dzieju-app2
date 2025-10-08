@@ -255,6 +255,63 @@ class MailConnection:
         log("[MAIL CONNECTION] No IMAP/POP3 accounts found in configuration")
         return None
     
+    def load_exchange_mail_config(self):
+        """Load Exchange mail configuration from exchange_mail_config.json"""
+        try:
+            with open("exchange_mail_config.json", "r", encoding="utf-8") as f:
+                config = json.load(f)
+                return config
+        except FileNotFoundError:
+            log("[MAIL CONNECTION] No exchange_mail_config.json found")
+            return None
+        except Exception as e:
+            log(f"[MAIL CONNECTION] ERROR loading exchange_mail_config.json: {str(e)}")
+            return None
+    
+    def get_exchange_account(self):
+        """Get first available Exchange account connection from exchange_mail_config.json"""
+        # Try to load from Exchange-specific config first
+        config = self.load_exchange_mail_config()
+        
+        # If no Exchange-specific config, try to find Exchange account in mail_config.json
+        if not config:
+            log("[MAIL CONNECTION] No Exchange-specific config found, checking mail_config.json")
+            config = self.load_mail_config()
+        
+        if not config or not config.get("accounts"):
+            log("[MAIL CONNECTION] No Exchange configuration or accounts found")
+            return None
+        
+        accounts = config.get("accounts", [])
+        main_index = config.get("main_account_index", 0)
+        
+        # First, try to use the main account if it's Exchange
+        if main_index < len(accounts):
+            main_account = accounts[main_index]
+            # In exchange_mail_config.json, all accounts are Exchange, no type field needed
+            # But check for type field if it exists (for mail_config.json compatibility)
+            account_type = main_account.get("type", "exchange")
+            if account_type == "exchange":
+                log(f"[MAIL CONNECTION] Using main Exchange account (index {main_index}): {main_account.get('name', 'Unknown')}")
+                # Add type field if missing (for exchange_mail_config.json accounts)
+                if "type" not in main_account:
+                    main_account["type"] = "exchange"
+                return self._get_account_connection(main_account)
+        
+        # If main account is not Exchange, find the first Exchange account
+        for idx, account_config in enumerate(accounts):
+            account_type = account_config.get("type", "exchange")
+            if account_type == "exchange":
+                log(f"[MAIL CONNECTION] Using first available Exchange account (index {idx}): {account_config.get('name', 'Unknown')}")
+                # Add type field if missing (for exchange_mail_config.json accounts)
+                if "type" not in account_config:
+                    account_config["type"] = "exchange"
+                return self._get_account_connection(account_config)
+        
+        # No Exchange accounts found
+        log("[MAIL CONNECTION] No Exchange accounts found in configuration")
+        return None
+    
     def _get_account_connection(self, account_config):
         """Get connection for specific account configuration"""
         # Close any existing connections before creating new ones
