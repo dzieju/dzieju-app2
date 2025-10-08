@@ -534,7 +534,11 @@ class MailConnection:
         
         subfolders = []
         try:
-            for child in folder.children:
+            # Access children - may trigger network call to Exchange server
+            children = folder.children
+            log(f"[MAIL CONNECTION] Accessing {len(children)} children of folder '{folder.name}'")
+            
+            for child in children:
                 if child.name not in excluded_folder_names:
                     subfolders.append(child)
                     # Recursively get subfolders
@@ -543,7 +547,8 @@ class MailConnection:
                 else:
                     log(f"Wykluczono folder: {child.name}")
         except Exception as e:
-            log(f"Błąd pobierania podfolderów dla {folder.name}: {str(e)}")
+            log(f"[MAIL CONNECTION] ERROR accessing subfolders of '{folder.name}': {str(e)}")
+            # Continue with what we have so far instead of failing completely
         
         return subfolders
     
@@ -639,19 +644,14 @@ class MailConnection:
                 log("[MAIL CONNECTION] ERROR: Could not access Exchange folder for discovery")
                 return self._get_fallback_folders()
             
-            folder_names = []
+            log(f"[MAIL CONNECTION] Starting Exchange folder discovery from: '{folder.name}'")
             
-            def collect_folder_names(f, prefix=""):
-                try:
-                    for child in f.children:
-                        full_name = f"{prefix}{child.name}" if prefix else child.name
-                        folder_names.append(full_name)
-                        # Recursively collect subfolders
-                        collect_folder_names(child, f"{full_name}/")
-                except Exception as e:
-                    log(f"[MAIL CONNECTION] ERROR collecting folder names from {f.name if hasattr(f, 'name') else 'Unknown'}: {str(e)}")
+            # Get all subfolders recursively (without exclusions since we want to show all as options)
+            all_subfolders = self._get_all_subfolders_recursive(folder, set())
             
-            collect_folder_names(folder)
+            # Extract folder names from folder objects
+            folder_names = [subfolder.name for subfolder in all_subfolders]
+            folder_names.sort()  # Sort alphabetically for better UX
             
             # Add common Exchange folders if not found
             exchange_common = ["Sent Items", "Drafts", "Deleted Items", "Junk Email", "Outbox"]
