@@ -338,15 +338,19 @@ class ExchangeSearchTab(ttk.Frame):
         threading.Thread(target=self._perform_search, daemon=True).start()
     
     def _validate_mail_configuration(self):
-        """Validate mail configuration before search"""
-        config = self.connection.load_mail_config()
+        """Validate Exchange mail configuration before search"""
+        config = self.connection.load_exchange_mail_config()
+        
+        # Fallback to mail_config.json if no Exchange-specific config
+        if not config:
+            config = self.connection.load_mail_config()
         
         if not config:
             response = messagebox.askquestion(
-                "Brak konfiguracji poczty",
-                "Nie znaleziono konfiguracji konta pocztowego.\n\n"
-                "Aby wyszukiwać e-maile, musisz najpierw skonfigurować połączenie z serwerem pocztowym.\n\n"
-                "Czy chcesz przejść do konfiguracji poczty?",
+                "Brak konfiguracji Exchange",
+                "Nie znaleziono konfiguracji konta Exchange.\n\n"
+                "Aby wyszukiwać e-maile, musisz najpierw skonfigurować połączenie z serwerem Exchange.\n\n"
+                "Czy chcesz przejść do konfiguracji poczty Exchange?",
                 icon='warning'
             )
             if response == 'yes' and self.config_tab_callback:
@@ -356,10 +360,10 @@ class ExchangeSearchTab(ttk.Frame):
         accounts = config.get("accounts", [])
         if not accounts:
             response = messagebox.askquestion(
-                "Brak kont pocztowych",
-                "Nie znaleziono żadnych skonfigurowanych kont pocztowych.\n\n"
-                "Aby wyszukiwać e-maile, musisz dodać przynajmniej jedno konto.\n\n"
-                "Czy chcesz przejść do konfiguracji poczty?",
+                "Brak kont Exchange",
+                "Nie znaleziono żadnych skonfigurowanych kont Exchange.\n\n"
+                "Aby wyszukiwać e-maile, musisz dodać przynajmniej jedno konto Exchange.\n\n"
+                "Czy chcesz przejść do konfiguracji poczty Exchange?",
                 icon='warning'
             )
             if response == 'yes' and self.config_tab_callback:
@@ -372,57 +376,34 @@ class ExchangeSearchTab(ttk.Frame):
             main_index = 0
         
         main_account = accounts[main_index]
-        account_type = main_account.get("type", "")
+        # In exchange_mail_config.json, all accounts are Exchange (no type field)
+        # But handle both cases for compatibility
+        account_type = main_account.get("type", "exchange")
         email = main_account.get("email", "")
         
         if not email:
             response = messagebox.askquestion(
-                "Niepełna konfiguracja",
-                "Główne konto pocztowe nie ma ustawionego adresu e-mail.\n\n"
-                "Czy chcesz przejść do konfiguracji poczty?",
+                "Niepełna konfiguracja Exchange",
+                "Główne konto Exchange nie ma ustawionego adresu e-mail.\n\n"
+                "Czy chcesz przejść do konfiguracji poczty Exchange?",
                 icon='warning'
             )
             if response == 'yes' and self.config_tab_callback:
                 self.config_tab_callback()
             return False
         
-        # Validate account type specific fields
-        if account_type == "exchange":
-            server = main_account.get("exchange_server", "")
-            if not server:
-                response = messagebox.askquestion(
-                    "Niepełna konfiguracja Exchange",
-                    "Konto Exchange nie ma ustawionego adresu serwera.\n\n"
-                    "Czy chcesz przejść do konfiguracji poczty?",
-                    icon='warning'
-                )
-                if response == 'yes' and self.config_tab_callback:
-                    self.config_tab_callback()
-                return False
-        elif account_type == "imap_smtp":
-            imap_server = main_account.get("imap_server", "")
-            if not imap_server:
-                response = messagebox.askquestion(
-                    "Niepełna konfiguracja IMAP",
-                    "Konto IMAP nie ma ustawionego adresu serwera IMAP.\n\n"
-                    "Czy chcesz przejść do konfiguracji poczty?",
-                    icon='warning'
-                )
-                if response == 'yes' and self.config_tab_callback:
-                    self.config_tab_callback()
-                return False
-        elif account_type == "pop3_smtp":
-            pop3_server = main_account.get("pop3_server", "")
-            if not pop3_server:
-                response = messagebox.askquestion(
-                    "Niepełna konfiguracja POP3",
-                    "Konto POP3 nie ma ustawionego adresu serwera POP3.\n\n"
-                    "Czy chcesz przejść do konfiguracji poczty?",
-                    icon='warning'
-                )
-                if response == 'yes' and self.config_tab_callback:
-                    self.config_tab_callback()
-                return False
+        # Validate Exchange-specific fields
+        server = main_account.get("exchange_server", "")
+        if not server:
+            response = messagebox.askquestion(
+                "Niepełna konfiguracja Exchange",
+                "Konto Exchange nie ma ustawionego adresu serwera.\n\n"
+                "Czy chcesz przejść do konfiguracji poczty Exchange?",
+                icon='warning'
+            )
+            if response == 'yes' and self.config_tab_callback:
+                self.config_tab_callback()
+            return False
         
         return True
     
