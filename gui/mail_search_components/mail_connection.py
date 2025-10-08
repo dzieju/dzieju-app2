@@ -312,8 +312,10 @@ class MailConnection:
                             message_count = status.get(b'MESSAGES', 0)
                             
                             # Approximate size (IMAP doesn't provide total size easily)
-                            # Estimate: 50KB per message on average
-                            estimated_size = message_count * 50 * 1024
+                            # Estimate: 150KB per message on average (accounts for attachments)
+                            # This is a reasonable middle ground between plain text (~10KB) and 
+                            # messages with attachments (~300KB+)
+                            estimated_size = message_count * 150 * 1024
                             
                         except Exception as status_error:
                             log(f"[MAIL CONNECTION] Could not get status for folder '{folder_name}': {status_error}")
