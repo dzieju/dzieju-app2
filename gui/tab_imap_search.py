@@ -341,6 +341,21 @@ class IMAPSearchTab(ttk.Frame):
         
         # Update excluded_folders from checkboxes before search
         self.vars['excluded_folders'].set(self._get_excluded_folders_from_checkboxes())
+        
+        # Establish IMAP account connection before search
+        # This sets connection.current_account_config with the IMAP account
+        try:
+            account = self.connection.get_imap_account()
+            if not account:
+                self._add_result({'type': 'search_error', 'error': 'Nie można połączyć z kontem IMAP. Sprawdź konfigurację.'})
+                self.search_button.config(text="Rozpocznij wyszukiwanie")
+                self.status_label.config(text="Błąd połączenia", foreground="red")
+                return
+        except Exception as e:
+            self._add_result({'type': 'search_error', 'error': f'Błąd połączenia z kontem IMAP: {str(e)}'})
+            self.search_button.config(text="Rozpocznij wyszukiwanie")
+            self.status_label.config(text="Błąd połączenia", foreground="red")
+            return
 
         threading.Thread(target=self._perform_search, daemon=True).start()
     
