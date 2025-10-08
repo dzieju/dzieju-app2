@@ -28,6 +28,9 @@ class ExchangeMailConfigWidget(ttk.Frame):
         self.main_account_index = 0
         self.selected_account_index = 0
         
+        # Callback for when configuration is saved
+        self.on_config_saved = None
+        
         self.create_widgets()
         self.load_config()
         
@@ -270,6 +273,10 @@ class ExchangeMailConfigWidget(ttk.Frame):
             self.update_account_list()
             messagebox.showinfo("Zapisano", "Konfiguracja Exchange została zapisana.")
             log(f"Zapisano konfigurację Exchange: {len(self.accounts)} kont")
+            
+            # Notify parent of configuration change
+            if self.on_config_saved:
+                self.on_config_saved()
         except Exception as e:
             messagebox.showerror("Błąd", f"Nie można zapisać konfiguracji: {str(e)}")
             log(f"Błąd zapisu konfiguracji Exchange: {e}")
