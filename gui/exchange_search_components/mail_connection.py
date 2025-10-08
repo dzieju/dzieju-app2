@@ -72,6 +72,23 @@ class FolderNameMapper:
         "skrzynka nadawcza": "OUTBOX"
     }
     
+    # Exchange-specific English folder names to Polish mapping
+    EXCHANGE_ENGLISH_TO_POLISH = {
+        "inbox": "Odebrane",
+        "sent items": "Wysłane",
+        "drafts": "Szkice",
+        "deleted items": "Kosz",
+        "junk email": "Spam",
+        "outbox": "Skrzynka nadawcza",
+        "archive": "Archiwum",
+        "conversation history": "Historia konwersacji",
+        "notes": "Notatki",
+        "journal": "Dziennik",
+        "tasks": "Zadania",
+        "calendar": "Kalendarz",
+        "contacts": "Kontakty"
+    }
+    
     # Manual reverse mapping for display purposes (using preferred Polish names)
     SERVER_TO_POLISH = {
         "INBOX": "skrzynka odbiorcza",
@@ -116,11 +133,19 @@ class FolderNameMapper:
     @classmethod
     def get_folder_display_name(cls, server_name, account_type="imap_smtp"):
         """Get appropriate display name for folder based on account type"""
-        # For Exchange, we show actual server names
-        # For IMAP/POP, we can show Polish names if available
+        if not server_name:
+            return "skrzynka odbiorcza"
+        
+        # For Exchange, translate English folder names to Polish
         if account_type == "exchange":
+            # Check if it's a common Exchange English folder name
+            lower_name = server_name.lower()
+            if lower_name in cls.EXCHANGE_ENGLISH_TO_POLISH:
+                return cls.EXCHANGE_ENGLISH_TO_POLISH[lower_name]
+            # Return original name for custom folders
             return server_name
         else:
+            # For IMAP/POP, use standard server to Polish mapping
             return cls.server_to_polish(server_name)
     
     @classmethod
@@ -750,19 +775,70 @@ class MailConnection:
             
             # Extract folder names from folder objects
             folder_names = [subfolder.name for subfolder in all_subfolders]
-            folder_names.sort()  # Sort alphabetically for better UX
             
-            # Add common Exchange folders if not found
+            # Also include well-known Exchange system folders that might not be in the tree
+            try:
+                well_known_folders = []
+                if hasattr(account, 'sent') and account.sent:
+                    well_known_folders.append(account.sent.name)
+                if hasattr(account, 'drafts') and account.drafts:
+                    well_known_folders.append(account.drafts.name)
+                if hasattr(account, 'trash') and account.trash:
+                    well_known_folders.append(account.trash.name)
+                if hasattr(account, 'junk') and account.junk:
+                    well_known_folders.append(account.junk.name)
+                if hasattr(account, 'outbox') and account.outbox:
+                    well_known_folders.append(account.outbox.name)
+                
+                # Add well-known folders if not already in list
+                for wk_folder in well_known_folders:
+                    if wk_folder and wk_folder not in folder_names:
+                        folder_names.append(wk_folder)
+                        log(f"[MAIL CONNECTION] Added well-known folder: {wk_folder}")
+            except Exception as wk_error:
+                log(f"[MAIL CONNECTION] Warning: Could not access well-known folders: {wk_error}")
+            
+            # Add common Exchange folders if still not found (fallback)
             exchange_common = ["Sent Items", "Drafts", "Deleted Items", "Junk Email", "Outbox"]
             for common_folder in exchange_common:
                 if common_folder not in folder_names:
                     folder_names.append(common_folder)
             
-            log(f"[MAIL CONNECTION] Found Exchange folders for exclusion ({len(folder_names)}):")
-            for i, name in enumerate(folder_names, 1):
+            # Remove duplicates while preserving order
+            unique_folders = []
+            seen = set()
+            for fname in folder_names:
+                if fname.lower() not in seen:
+                    unique_folders.append(fname)
+                    seen.add(fname.lower())
+            
+            # Sort folders: system folders first (by common Exchange patterns), then custom folders
+            system_patterns = ['inbox', 'sent', 'draft', 'trash', 'deleted', 'junk', 'spam', 'outbox', 'archive']
+            
+            system_folders = []
+            custom_folders = []
+            
+            for fname in unique_folders:
+                fname_lower = fname.lower()
+                is_system = any(pattern in fname_lower for pattern in system_patterns)
+                if is_system:
+                    system_folders.append(fname)
+                else:
+                    custom_folders.append(fname)
+            
+            # Sort each category alphabetically
+            system_folders.sort(key=lambda x: x.lower())
+            custom_folders.sort(key=lambda x: x.lower())
+            
+            # Combine: system folders first, then custom folders
+            sorted_folders = system_folders + custom_folders
+            
+            log(f"[MAIL CONNECTION] Found Exchange folders for exclusion ({len(sorted_folders)}):")
+            log(f"[MAIL CONNECTION] System folders: {len(system_folders)}, Custom folders: {len(custom_folders)}")
+            for i, name in enumerate(sorted_folders, 1):
                 log(f"  {i}. {name}")
             
-            return folder_names
+            return sorted_folders
             
         except Exception as e:
             log(f"[MAIL CONNECTION] ERROR getting Exchange folders for exclusion: {str(e)}")
@@ -841,7 +917,19 @@ class MailConnection:
     
     def _get_fallback_folders(self):
         """Get fallback folder list when discovery fails"""
-        return ["SENT", "Sent", "DRAFTS", "Drafts", "SPAM", "Junk", "TRASH", "Trash", "Deleted"]
+        # Return common Exchange folder names (both English and variations)
+        return [
+            "Sent Items",
+            "Drafts", 
+            "Deleted Items",
+            "Junk Email",
+            "Outbox",
+            "Archive",
+            "Sent",
+            "Trash",
+            "Spam",
+            "Junk"
+        ]
     
     def close_connections(self):
         """Close all active connections"""
