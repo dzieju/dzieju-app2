@@ -229,6 +229,9 @@ class MailSearchUI:
         max_columns = 3
         folders_per_column = max(1, len(folders) // max_columns + (1 if len(folders) % max_columns else 0))
         
+        # Import FolderNameMapper for Polish translations
+        from gui.exchange_search_components.mail_connection import FolderNameMapper
+        
         for i, folder_name in enumerate(folders):
             var = tk.BooleanVar()
             exclusion_vars[folder_name] = var
@@ -236,9 +239,18 @@ class MailSearchUI:
             row = i % folders_per_column
             column = i // folders_per_column
             
+            # Get Polish display name for the folder
+            display_name = FolderNameMapper.get_folder_display_name(folder_name, "exchange")
+            
+            # If the display name is different from the original, show both
+            if display_name != folder_name and display_name.lower() != folder_name.lower():
+                checkbox_text = f"{display_name} ({folder_name})"
+            else:
+                checkbox_text = folder_name
+            
             checkbox = ttk.Checkbutton(
                 checkboxes_frame, 
-                text=folder_name, 
+                text=checkbox_text, 
                 variable=var
             )
             checkbox.grid(row=row, column=column, sticky="w", padx=5, pady=2)

@@ -31,18 +31,20 @@ class FolderInfo:
         folder_basename = name_upper.split('/')[-1].split('.')[-1]
         
         # SPECIAL-USE flags (RFC 6154) OR name-based detection (English and Polish)
-        if '\\INBOX' in flag_str or name_upper == 'INBOX' or folder_basename == 'ODEBRANE':
+        if '\\INBOX' in flag_str or name_upper == 'INBOX' or folder_basename in ('ODEBRANE', 'PRZYCHODZĄCE'):
             return 'inbox'
-        elif '\\SENT' in flag_str or 'SENT' in name_upper or folder_basename in ('WYSLANE', 'WYSŁANE', 'SENT ITEMS'):
+        elif '\\SENT' in flag_str or folder_basename in ('WYSLANE', 'WYSŁANE', 'SENT ITEMS', 'SENT'):
             return 'sent'
-        elif '\\DRAFTS' in flag_str or 'DRAFT' in name_upper or folder_basename == 'SZKICE':
+        elif '\\DRAFTS' in flag_str or folder_basename in ('DRAFT', 'DRAFTS', 'SZKICE', 'ROBOCZE'):
             return 'drafts'
-        elif '\\TRASH' in flag_str or 'TRASH' in name_upper or 'DELETED' in name_upper or folder_basename == 'KOSZ':
+        elif '\\TRASH' in flag_str or folder_basename in ('TRASH', 'DELETED ITEMS', 'DELETED', 'KOSZ', 'ŚMIECI'):
             return 'trash'
-        elif '\\JUNK' in flag_str or 'SPAM' in name_upper or 'JUNK' in name_upper:
+        elif '\\JUNK' in flag_str or folder_basename in ('SPAM', 'JUNK', 'JUNK EMAIL'):
             return 'spam'
-        elif '\\ARCHIVE' in flag_str or 'ARCHIVE' in name_upper or folder_basename == 'ARCHIWUM':
+        elif '\\ARCHIVE' in flag_str or folder_basename in ('ARCHIVE', 'ARCHIWUM'):
             return 'archive'
+        elif folder_basename in ('OUTBOX', 'SKRZYNKA NADAWCZA'):
+            return 'outbox'
         
         return None
     
@@ -60,6 +62,8 @@ class FolderInfo:
             return '⚠️'
         elif self.is_special == 'archive':
             return '📦'
+        elif self.is_special == 'outbox':
+            return '📮'
         else:
             return '📁'
     
@@ -77,8 +81,12 @@ class FolderInfo:
             return 'Spam'
         elif self.is_special == 'archive':
             return 'Archiwum'
+        elif self.is_special == 'outbox':
+            return 'Skrzynka nadawcza'
         else:
-            return self.display_name
+            # For custom folders, use FolderNameMapper to get Polish name if available
+            from gui.exchange_search_components.mail_connection import FolderNameMapper
+            return FolderNameMapper.get_folder_display_name(self.display_name, "exchange")
     
     def format_size(self):
         """Format size in human-readable format"""
