@@ -250,10 +250,10 @@ class ExchangeSearchTab(ttk.Frame):
                     else:
                         # Show user-friendly message when no folders are discovered
                         self._add_progress("Nie udało się pobrać listy folderów z serwera")
-                        # Still show fallback folders for user convenience
-                        fallback_folders = ["SENT", "Sent", "DRAFTS", "Drafts", "SPAM", "Junk", "TRASH", "Trash"]
+                        # Still show fallback folders for user convenience - use Exchange-style names
+                        fallback_folders = ["Sent Items", "Drafts", "Deleted Items", "Junk Email", "Outbox", "Archive"]
                         self.after_idle(lambda: self._update_folder_checkboxes(fallback_folders))
-                        log("[FOLDER DISCOVERY] Using fallback folders due to discovery failure")
+                        log("[FOLDER DISCOVERY] Using Exchange-style fallback folders due to discovery failure")
                 else:
                     log("[FOLDER DISCOVERY] No account available")
                     self._add_progress("Brak dostępnego konta pocztowego")
@@ -263,8 +263,8 @@ class ExchangeSearchTab(ttk.Frame):
                 log(f"[FOLDER DISCOVERY] Error: {str(e)}")
                 print(f"Błąd wykrywania folderów: {e}")
                 self._add_progress("Błąd wykrywania folderów - sprawdź konfigurację konta")
-                # Provide fallback folders even on error
-                fallback_folders = ["SENT", "Sent", "DRAFTS", "Drafts", "SPAM", "Junk", "TRASH", "Trash"] 
+                # Provide Exchange-style fallback folders even on error
+                fallback_folders = ["Sent Items", "Drafts", "Deleted Items", "Junk Email", "Outbox", "Archive"]
                 self.after_idle(lambda: self._update_folder_checkboxes(fallback_folders))
         
         threading.Thread(target=_discover, daemon=True).start()
