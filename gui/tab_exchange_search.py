@@ -246,6 +246,7 @@ class ExchangeSearchTab(ttk.Frame):
                     
                     if folders:
                         self.after_idle(lambda: self._update_folder_checkboxes(folders))
+                        self.after_idle(lambda: self._show_folder_browser_window(folders))
                         self._add_progress(f"Wykryto {len(folders)} folderów")
                     else:
                         # Show user-friendly message when no folders are discovered
@@ -253,10 +254,16 @@ class ExchangeSearchTab(ttk.Frame):
                         # Still show fallback folders for user convenience - use Exchange-style names
                         fallback_folders = ["Sent Items", "Drafts", "Deleted Items", "Junk Email", "Outbox", "Archive"]
                         self.after_idle(lambda: self._update_folder_checkboxes(fallback_folders))
+                        self.after_idle(lambda: self._show_folder_browser_window(fallback_folders))
                         log("[FOLDER DISCOVERY] Using Exchange-style fallback folders due to discovery failure")
                 else:
                     log("[FOLDER DISCOVERY] No account available")
                     self._add_progress("Brak dostępnego konta pocztowego")
+                    # Show message box to guide user
+                    self.after_idle(lambda: messagebox.showinfo(
+                        "Brak konta Exchange", 
+                        "Nie skonfigurowano konta Exchange.\n\nAby wykryć foldery, przejdź do zakładki 'Konfiguracja poczty' i skonfiguruj konto Exchange."
+                    ))
                     
             except Exception as e:
                 from tools.logger import log
@@ -266,6 +273,7 @@ class ExchangeSearchTab(ttk.Frame):
                 # Provide Exchange-style fallback folders even on error
                 fallback_folders = ["Sent Items", "Drafts", "Deleted Items", "Junk Email", "Outbox", "Archive"]
                 self.after_idle(lambda: self._update_folder_checkboxes(fallback_folders))
+                self.after_idle(lambda: self._show_folder_browser_window(fallback_folders))
         
         threading.Thread(target=_discover, daemon=True).start()
     
@@ -310,6 +318,96 @@ class ExchangeSearchTab(ttk.Frame):
         
         # Update account display to show current status
         self.update_account_info_display()
+    
+    def _show_folder_browser_window(self, folders):
+        """Show folder browser in a popup window to display detected folders"""
+        from tools.logger import log
+        log(f"[FOLDER BROWSER] Opening folder browser window with {len(folders)} folders")
+        
+        try:
+            # Create modal window
+            browser_window = tk.Toplevel(self)
+            browser_window.title("Wykryte foldery Exchange")
+            browser_window.geometry("900x600")
+            browser_window.resizable(True, True)
+            
+            # Make it modal
+            browser_window.transient(self)
+            browser_window.grab_set()
+            
+            # Center the window
+            self._center_window(browser_window)
+            
+            # Add info label at top
+            info_frame = ttk.Frame(browser_window)
+            info_frame.pack(fill='x', padx=10, pady=10)
+            
+            info_label = ttk.Label(
+                info_frame,
+                text=f"Wykryto {len(folders)} folderów Exchange. Poniżej znajduje się lista wszystkich folderów.\n"
+                     f"Możesz wybrać, które foldery mają być wykluczane z wyszukiwania używając checkboxów poniżej.",
+                font=("Arial", 10),
+                foreground="blue",
+                wraplength=850,
+                justify="left"
+            )
+            info_label.pack(anchor='w')
+            
+            # Create frame for folder browser
+            browser_frame = ttk.Frame(browser_window)
+            browser_frame.pack(fill='both', expand=True, padx=10, pady=5)
+            
+            # Import and create FolderBrowser
+            from gui.exchange_search_components.folder_browser import FolderBrowser
+            folder_browser = FolderBrowser(browser_frame, self.connection)
+            folder_browser.pack(fill='both', expand=True)
+            
+            # Trigger automatic folder refresh to display folders
+            # We need to wait a moment for the UI to be ready
+            browser_window.after(100, folder_browser.refresh_folders)
+            
+            # Add close button at bottom
+            button_frame = ttk.Frame(browser_window)
+            button_frame.pack(fill='x', padx=10, pady=10)
+            
+            close_button = ttk.Button(
+                button_frame,
+                text="Zamknij",
+                command=browser_window.destroy,
+                width=15
+            )
+            close_button.pack(side='right')
+            
+            log("[FOLDER BROWSER] Folder browser window created successfully")
+            
+        except Exception as e:
+            log(f"[FOLDER BROWSER] Error creating folder browser window: {e}")
+            messagebox.showerror("Błąd", f"Błąd wyświetlania okna folderów: {e}")
+    
+    def _center_window(self, window):
+        """Center a window on the parent"""
+        try:
+            window.update_idletasks()
+            
+            # Get dimensions
+            window_width = window.winfo_reqwidth()
+            window_height = window.winfo_reqheight()
+            
+            # Get parent position and size
+            parent_x = self.winfo_rootx()
+            parent_y = self.winfo_rooty()
+            parent_width = self.winfo_width()
+            parent_height = self.winfo_height()
+            
+            # Calculate center position
+            x = parent_x + (parent_width // 2) - (window_width // 2)
+            y = parent_y + (parent_height // 2) - (window_height // 2)
+            
+            window.geometry(f"+{x}+{y}")
+            
+        except Exception:
+            # If centering fails, just continue
+            pass
     
     def _get_excluded_folders_from_checkboxes(self):
         """Get list of excluded folders from checkboxes"""
