@@ -3,6 +3,7 @@ PDF text extraction and search functionality for mail search
 """
 import io
 import os
+import re
 import tempfile
 from tools.logger import log
 
@@ -147,10 +148,17 @@ class PDFProcessor:
                         all_text_lower = all_text.lower()
                         if search_text_lower in all_text_lower:
                             matches = self._extract_matches(all_text, search_text_lower)
-                            log(f"Tekst znaleziony w PDF {attachment_name} przez ekstrakcję tekstu")
+                            log(f"Tekst znaleziony w PDF {attachment_name} przez ekstrakcję tekstu (dokładne dopasowanie)")
                             return {'found': True, 'matches': matches, 'method': 'text_extraction'}
                         else:
-                            log(f"Tekst nie znaleziony w PDF {attachment_name} przez ekstrakcję tekstu")
+                            # Try normalized search if exact match not found
+                            log(f"Dokładne dopasowanie nie znalezione, próba znormalizowanego wyszukiwania...")
+                            matches = self._extract_matches(all_text, search_text_lower)
+                            if matches:
+                                log(f"Tekst znaleziony w PDF {attachment_name} przez ekstrakcję tekstu (dopasowanie przybliżone)")
+                                return {'found': True, 'matches': matches, 'method': 'text_extraction_normalized'}
+                            else:
+                                log(f"Tekst nie znaleziony w PDF {attachment_name} przez ekstrakcję tekstu")
                     else:
                         log(f"Brak tekstu do ekstrakcji z PDF {attachment_name}")
                         
@@ -221,10 +229,17 @@ class PDFProcessor:
                 all_ocr_text_lower = all_ocr_text.lower()
                 if search_text_lower in all_ocr_text_lower:
                     matches = self._extract_matches(all_ocr_text, search_text_lower)
-                    log(f"Tekst znaleziony w PDF {attachment_name} przez OCR")
+                    log(f"Tekst znaleziony w PDF {attachment_name} przez OCR (dokładne dopasowanie)")
                     return {'found': True, 'matches': matches, 'method': 'ocr'}
                 else:
-                    log(f"Tekst nie znaleziony w PDF {attachment_name} przez OCR")
+                    # Try normalized search if exact match not found
+                    log(f"Dokładne dopasowanie OCR nie znalezione, próba znormalizowanego wyszukiwania...")
+                    matches = self._extract_matches(all_ocr_text, search_text_lower)
+                    if matches:
+                        log(f"Tekst znaleziony w PDF {attachment_name} przez OCR (dopasowanie przybliżone)")
+                        return {'found': True, 'matches': matches, 'method': 'ocr_normalized'}
+                    else:
+                        log(f"Tekst nie znaleziony w PDF {attachment_name} przez OCR")
             else:
                 log(f"Brak tekstu z OCR z PDF {attachment_name}")
                 
@@ -238,7 +253,7 @@ class PDFProcessor:
         matches = []
         full_text_lower = full_text.lower()
         
-        # Find all occurrences
+        # Find all occurrences - try both exact match and normalized match
         start = 0
         while True:
             pos = full_text_lower.find(search_text_lower, start)
@@ -254,5 +269,41 @@ class PDFProcessor:
                 matches.append(context)
             
             start = pos + 1
+        
+        # If no exact matches found, try normalized search (remove spaces, special chars)
+        if not matches and len(search_text_lower) > 3:  # Only for longer search terms
+            normalized_search = re.sub(r'[\s\-_./\\]+', '', search_text_lower)
+            normalized_text = re.sub(r'[\s\-_./\\]+', '', full_text_lower)
+            
+            start = 0
+            while True:
+                pos = normalized_text.find(normalized_search, start)
+                if pos == -1:
+                    break
+                
+                # Try to find approximate position in original text
+                # This is a rough approximation - count chars before position
+                chars_before = pos
+                approx_pos = 0
+                char_count = 0
+                for i, char in enumerate(full_text):
+                    if not re.match(r'[\s\-_./\\]', char.lower()):
+                        char_count += 1
+                    if char_count >= chars_before:
+                        approx_pos = i
+                        break
+                
+                # Extract context around approximate match
+                context_start = max(0, approx_pos - 50)
+                context_end = min(len(full_text), approx_pos + len(search_text_lower) + 100)
+                
+                context = full_text[context_start:context_end].strip()
+                if context not in matches:
+                    matches.append(f"[Dopasowanie przybliżone] {context}")
+                
+                start = pos + 1
+                
+                if len(matches) >= 3:  # Limit normalized matches
+                    break
         
         return matches[:5]  # Limit to 5 matches to avoid too much data
