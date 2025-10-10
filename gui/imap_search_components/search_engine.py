@@ -902,11 +902,18 @@ class EmailSearchEngine:
         
         if not attachment_name_filter and not attachment_ext_filter:
             return True
-            
-        if not message.attachments:
+        
+        # Safely access attachments with error handling
+        try:
+            attachments_list = list(message.attachments) if message.attachments else []
+            if not attachments_list:
+                log(f"[ATTACHMENT FILTER] Wiadomość ma has_attachments=True ale brak załączników do sprawdzenia")
+                return False
+        except Exception as e:
+            log(f"[ATTACHMENT FILTER] Błąd dostępu do załączników: {str(e)}")
             return False
             
-        for attachment in message.attachments:
+        for attachment in attachments_list:
             if hasattr(attachment, 'name') and attachment.name:
                 attachment_name = attachment.name.lower()
                 
@@ -926,18 +933,37 @@ class EmailSearchEngine:
     
     def _check_pdf_content(self, message, search_text, skip_searched_pdfs=False):
         """Check if message has PDF attachments containing the search text"""
-        if not message.attachments or not search_text:
-            return {'found': False, 'matches': [], 'method': 'no_attachments_or_text'}
+        if not search_text:
+            return {'found': False, 'matches': [], 'method': 'no_search_text'}
         
-        # Log attachment count for debugging
-        attachment_count = len(message.attachments)
-        log(f"[PDF SEARCH] Sprawdzanie {attachment_count} załączników w wiadomości: {message.subject[:50] if message.subject else 'Bez tematu'}...")
+        # First check the has_attachments flag - this is more reliable than checking attachments directly
+        if hasattr(message, 'has_attachments') and not message.has_attachments:
+            log(f"[PDF SEARCH] Wiadomość '{message.subject[:50] if message.subject else 'Bez tematu'}' nie ma załączników (has_attachments=False)")
+            return {'found': False, 'matches': [], 'method': 'no_attachments_flag'}
+        
+        # Now try to access attachments with proper error handling
+        try:
+            # Force evaluation of attachments property
+            attachments_list = list(message.attachments) if message.attachments else []
+            attachment_count = len(attachments_list)
+            
+            if attachment_count == 0:
+                log(f"[PDF SEARCH] Wiadomość '{message.subject[:50] if message.subject else 'Bez tematu'}' ma has_attachments=True ale attachments jest pusta!")
+                # This is the bug - has_attachments says True but attachments is empty
+                # This means attachments weren't properly loaded
+                return {'found': False, 'matches': [], 'method': 'attachments_not_loaded'}
+            
+            log(f"[PDF SEARCH] Sprawdzanie {attachment_count} załączników w wiadomości: {message.subject[:50] if message.subject else 'Bez tematu'}...")
+            
+        except Exception as e:
+            log(f"[PDF SEARCH] BŁĄD dostępu do załączników w wiadomości '{message.subject[:50] if message.subject else 'Bez tematu'}': {str(e)}")
+            return {'found': False, 'matches': [], 'method': 'attachment_access_error', 'error': str(e)}
         
         found_matches = []
         found_attachment_names = []
         skipped_pdfs_count = 0
         
-        for attachment in message.attachments:
+        for attachment in attachments_list:
             if self.search_cancelled:
                 return {'found': False, 'matches': [], 'method': 'cancelled'}
             
