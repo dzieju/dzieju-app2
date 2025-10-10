@@ -217,13 +217,30 @@ class MailSearchUI:
         # Configure header grid
         header_frame.grid_columnconfigure(0, weight=1)
         
-        # Create frame for checkboxes
-        checkboxes_frame = ttk.Frame(container_frame, relief="sunken", borderwidth=1)
-        checkboxes_frame.grid(row=1, column=0, columnspan=5, padx=5, pady=5, sticky="ew")
+        # Create scrollable frame for checkboxes with horizontal scrollbar
+        scroll_wrapper = ttk.Frame(container_frame)
+        scroll_wrapper.grid(row=1, column=0, columnspan=5, padx=5, pady=5, sticky="ew")
+        
+        # Create canvas for scrolling
+        canvas = tk.Canvas(scroll_wrapper, height=200, relief="sunken", borderwidth=1)
+        canvas.grid(row=0, column=0, sticky="ew")
+        
+        # Add horizontal scrollbar
+        h_scrollbar = ttk.Scrollbar(scroll_wrapper, orient=tk.HORIZONTAL, command=canvas.xview)
+        h_scrollbar.grid(row=1, column=0, sticky="ew")
+        
+        canvas.configure(xscrollcommand=h_scrollbar.set)
+        
+        # Configure grid weights for scroll wrapper
+        scroll_wrapper.grid_columnconfigure(0, weight=1)
+        
+        # Create frame for checkboxes inside canvas
+        checkboxes_frame = ttk.Frame(canvas)
+        canvas_window = canvas.create_window((0, 0), window=checkboxes_frame, anchor="nw")
         
         # Initially hide or show based on is_visible parameter
         if not is_visible:
-            checkboxes_frame.grid_remove()
+            scroll_wrapper.grid_remove()
         
         # Create checkboxes in multiple columns if there are many folders
         max_columns = 3
@@ -246,8 +263,17 @@ class MailSearchUI:
         # Configure grid weights for the checkboxes frame
         for col in range(max_columns):
             checkboxes_frame.columnconfigure(col, weight=1)
-            
+        
+        # Update canvas scroll region after checkboxes are created
+        checkboxes_frame.update_idletasks()
+        canvas.configure(scrollregion=canvas.bbox("all"))
+        
+        # Bind frame resize to update scroll region
+        def on_frame_configure(event):
+            canvas.configure(scrollregion=canvas.bbox("all"))
+        checkboxes_frame.bind("<Configure>", on_frame_configure)
+        
         # Configure main container grid
         container_frame.grid_columnconfigure(0, weight=1)
         
-        return container_frame, (toggle_button, save_button, check_all_button, uncheck_all_button, checkboxes_frame)
+        return container_frame, (toggle_button, save_button, check_all_button, uncheck_all_button, scroll_wrapper)
