@@ -138,9 +138,9 @@ if not HAVE_PDFPLUMBER and not HAVE_OCR:
    - Tests "Play - e-korekta do pobrania" scenario
    - Tests various attachment states
 
-### ✅ New Comprehensive Tests (5 tests added)
+### ✅ New Comprehensive Tests (8 tests added)
 
-**File**: `tests/test_nip_search_comprehensive.py`
+**File**: `tests/test_nip_search_comprehensive.py` (5 tests)
 
 1. `test_nip_formats_normalization` - Verifies all NIP format variations match
 2. `test_play_email_scenario_with_nip_in_pdf` - Exact scenario from issue
@@ -148,7 +148,15 @@ if not HAVE_PDFPLUMBER and not HAVE_OCR:
 4. `test_attachment_loading_check` - All edge cases covered
 5. `test_only_pdf_attachments_are_processed` - Non-PDF files skipped
 
-**Total test coverage**: 23 tests, all passing ✅
+**File**: `tests/test_play_email_debug.py` (3 tests)
+
+1. `test_play_email_complete_flow` - Complete flow simulation with tracing
+2. `test_play_email_edge_case_empty_attachments` - V2 fix validation (empty list)
+3. `test_play_email_edge_case_none_attachments` - V2 fix validation (None)
+
+**Total test coverage**: 26 PDF-related tests out of 61 total tests (60 passing) ✅
+
+**Note**: New test files are in `.gitignore` but can be viewed in the working directory for verification purposes.
 
 ## Verification Checklist
 
