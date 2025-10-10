@@ -285,6 +285,15 @@ class MailConnection:
                 log("[MAIL CONNECTION] XLIST not supported, using regular LIST")
                 folder_list = imap.list_folders()
             
+            # List of folder name patterns to exclude (non-mail or technical folders)
+            EXCLUDED_FOLDER_PATTERNS = [
+                'Calendar',
+                'Contacts', 
+                'Notes',
+                'Tasks',
+                'Journal',
+            ]
+            
             for folder_data in folder_list:
                 if folder_data:
                     try:
@@ -297,6 +306,16 @@ class MailConnection:
                         folder_name = folder_name.strip()
                         
                         if not folder_name:
+                            continue
+                        
+                        # Skip folders with \Noselect flag (hierarchy-only folders)
+                        if flags and b'\\Noselect' in flags:
+                            log(f"[MAIL CONNECTION] Skipping \\Noselect folder: {folder_name}")
+                            continue
+                        
+                        # Skip technical/non-mail folders
+                        if any(pattern in folder_name for pattern in EXCLUDED_FOLDER_PATTERNS):
+                            log(f"[MAIL CONNECTION] Skipping technical folder: {folder_name}")
                             continue
                         
                         # Get folder status (message count)

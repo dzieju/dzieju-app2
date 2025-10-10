@@ -331,10 +331,40 @@ class MailConnection:
             
             log(f"[MAIL CONNECTION] Processing {len(all_folders)} Exchange folders")
             
+            # List of non-mail folder classes to exclude (like Thunderbird does)
+            EXCLUDED_FOLDER_CLASSES = [
+                'IPF.Appointment',   # Calendar
+                'IPF.Contact',       # Contacts
+                'IPF.Task',          # Tasks
+                'IPF.StickyNote',    # Notes
+                'IPF.Journal',       # Journal
+            ]
+            
+            # List of folder names to exclude (technical/system folders)
+            EXCLUDED_FOLDER_NAMES = [
+                'Conversation History',
+                'Sync Issues',
+                'Conflicts',
+                'Local Failures',
+                'Server Failures',
+            ]
+            
             for folder in all_folders:
                 try:
                     # Get folder properties
                     folder_name = folder.name
+                    
+                    # Check if folder class is in excluded list (non-mail folders)
+                    folder_class = getattr(folder, 'folder_class', None)
+                    if folder_class and folder_class in EXCLUDED_FOLDER_CLASSES:
+                        log(f"[MAIL CONNECTION] Skipping non-mail folder: {folder_name} (class: {folder_class})")
+                        continue
+                    
+                    # Check if folder name matches excluded patterns
+                    if any(excluded in folder_name for excluded in EXCLUDED_FOLDER_NAMES):
+                        log(f"[MAIL CONNECTION] Skipping technical folder: {folder_name}")
+                        continue
+                    
                     message_count = 0
                     estimated_size = 0
                     
@@ -349,7 +379,6 @@ class MailConnection:
                     
                     # Exchange folders don't have IMAP-style flags, but we can identify special folders
                     flags = []
-                    folder_class = getattr(folder, 'folder_class', None)
                     if folder_class:
                         # Map Exchange folder classes to IMAP-style flags for consistency
                         if 'IPF.Note' in folder_class:
