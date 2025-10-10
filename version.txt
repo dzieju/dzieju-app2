@@ -1,3 +1,3 @@
 Program: Ksieg-OCR
-Commit: 255b4
-PR: 71
+Commit: 0f963
+PR: 73
