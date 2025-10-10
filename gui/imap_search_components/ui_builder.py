@@ -181,7 +181,10 @@ class MailSearchUI:
             
         # Create main container frame
         container_frame = ttk.Frame(self.parent)
-        container_frame.grid(row=2, column=0, columnspan=5, padx=5, pady=5, sticky="ew")
+        container_frame.grid(row=2, column=0, columnspan=5, padx=5, pady=5, sticky="nsew")
+        
+        # Configure parent row to be expandable for responsive height
+        self.parent.grid_rowconfigure(2, weight=1)
         
         # Create header frame with title and hide/show button
         header_frame = ttk.Frame(container_frame)
@@ -217,22 +220,27 @@ class MailSearchUI:
         # Configure header grid
         header_frame.grid_columnconfigure(0, weight=1)
         
-        # Create scrollable frame for checkboxes with horizontal scrollbar
+        # Create scrollable frame for checkboxes with horizontal and vertical scrollbars
         scroll_wrapper = ttk.Frame(container_frame)
-        scroll_wrapper.grid(row=1, column=0, columnspan=5, padx=5, pady=5, sticky="ew")
+        scroll_wrapper.grid(row=1, column=0, columnspan=5, padx=5, pady=5, sticky="nsew")
         
-        # Create canvas for scrolling
-        canvas = tk.Canvas(scroll_wrapper, height=200, relief="sunken", borderwidth=1)
-        canvas.grid(row=0, column=0, sticky="ew")
+        # Create canvas for scrolling (responsive height)
+        canvas = tk.Canvas(scroll_wrapper, relief="sunken", borderwidth=1)
+        canvas.grid(row=0, column=0, sticky="nsew")
+        
+        # Add vertical scrollbar
+        v_scrollbar = ttk.Scrollbar(scroll_wrapper, orient=tk.VERTICAL, command=canvas.yview)
+        v_scrollbar.grid(row=0, column=1, sticky="ns")
         
         # Add horizontal scrollbar
         h_scrollbar = ttk.Scrollbar(scroll_wrapper, orient=tk.HORIZONTAL, command=canvas.xview)
         h_scrollbar.grid(row=1, column=0, sticky="ew")
         
-        canvas.configure(xscrollcommand=h_scrollbar.set)
+        canvas.configure(xscrollcommand=h_scrollbar.set, yscrollcommand=v_scrollbar.set)
         
-        # Configure grid weights for scroll wrapper
+        # Configure grid weights for scroll wrapper to be responsive
         scroll_wrapper.grid_columnconfigure(0, weight=1)
+        scroll_wrapper.grid_rowconfigure(0, weight=1)
         
         # Create frame for checkboxes inside canvas
         checkboxes_frame = ttk.Frame(canvas)
@@ -273,7 +281,17 @@ class MailSearchUI:
             canvas.configure(scrollregion=canvas.bbox("all"))
         checkboxes_frame.bind("<Configure>", on_frame_configure)
         
-        # Configure main container grid
+        # Bind canvas resize to adjust internal frame width for responsiveness
+        def on_canvas_configure(event):
+            # Make the frame fill the canvas width if it's smaller
+            canvas_width = event.width
+            frame_width = checkboxes_frame.winfo_reqwidth()
+            if frame_width < canvas_width:
+                canvas.itemconfig(canvas_window, width=canvas_width)
+        canvas.bind("<Configure>", on_canvas_configure)
+        
+        # Configure main container grid for full responsiveness
         container_frame.grid_columnconfigure(0, weight=1)
+        container_frame.grid_rowconfigure(1, weight=1)  # Make the scroll_wrapper row expandable
         
         return container_frame, (toggle_button, save_button, check_all_button, uncheck_all_button, scroll_wrapper)
