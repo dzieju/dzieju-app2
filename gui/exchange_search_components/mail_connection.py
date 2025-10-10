@@ -667,23 +667,80 @@ class MailConnection:
             return [folder] if folder else []
     
     def _get_exchange_folder_with_subfolders(self, account, folder_path, excluded_folders=None):
-        """Get Exchange folder and all its subfolders recursively"""
+        """Get Exchange folder and all its subfolders recursively
+        
+        Note: This method now searches ALL folders starting from root, not just subfolders
+        of the specified folder_path. This ensures complete Exchange mailbox search.
+        The folder_path parameter is kept for backward compatibility but is no longer
+        used to limit the search scope.
+        """
         try:
-            folder = self.get_folder_by_path(account, folder_path)
-            if not folder:
-                return []
+            # Start from root folder to search ALL Exchange folders, not just subfolders
+            # of the specified path. This ensures complete mailbox coverage.
+            log(f"[MAIL CONNECTION] Starting Exchange folder search from root (ignoring folder_path parameter '{folder_path}' for complete coverage)")
             
-            all_folders = [folder]
-            excluded_names = set(excluded_folders or [])
+            try:
+                root_folder = account.root
+                log(f"[MAIL CONNECTION] Successfully accessed root folder: '{root_folder.name}'")
+            except Exception as root_error:
+                log(f"[MAIL CONNECTION] Could not access root folder, trying inbox parent: {root_error}")
+                try:
+                    root_folder = account.inbox.parent
+                    log(f"[MAIL CONNECTION] Using inbox parent: '{root_folder.name}'")
+                except Exception as parent_error:
+                    log(f"[MAIL CONNECTION] Could not access inbox parent, falling back to inbox: {parent_error}")
+                    root_folder = account.inbox
+                    log(f"[MAIL CONNECTION] Using inbox as fallback: '{root_folder.name}'")
             
-            subfolders = self._get_all_subfolders_recursive(folder, excluded_names)
-            all_folders.extend(subfolders)
+            # Parse excluded folders
+            excluded_names = set()
+            if excluded_folders:
+                if isinstance(excluded_folders, str):
+                    # Parse comma-separated string
+                    excluded_names = set(f.strip() for f in excluded_folders.split(',') if f.strip())
+                elif isinstance(excluded_folders, (list, set)):
+                    excluded_names = set(excluded_folders)
+                
+                if excluded_names:
+                    log(f"[MAIL CONNECTION] Excluding {len(excluded_names)} folders: {', '.join(excluded_names)}")
             
-            log(f"Znaleziono łącznie {len(all_folders)} folderów do przeszukania")
+            # Get all subfolders recursively from root (this covers entire mailbox)
+            all_folders = self._get_all_subfolders_recursive(root_folder, excluded_names)
+            
+            # Include root folder itself if it's not excluded
+            if root_folder.name not in excluded_names:
+                all_folders.insert(0, root_folder)
+            
+            # Also ensure well-known folders are included (inbox, sent, drafts, etc.)
+            well_known_folders = []
+            try:
+                if hasattr(account, 'inbox') and account.inbox:
+                    well_known_folders.append(account.inbox)
+                if hasattr(account, 'sent') and account.sent:
+                    well_known_folders.append(account.sent)
+                if hasattr(account, 'drafts') and account.drafts:
+                    well_known_folders.append(account.drafts)
+                if hasattr(account, 'trash') and account.trash:
+                    well_known_folders.append(account.trash)
+                if hasattr(account, 'junk') and account.junk:
+                    well_known_folders.append(account.junk)
+                
+                # Add well-known folders if not already in list and not excluded
+                for wk_folder in well_known_folders:
+                    if wk_folder and wk_folder.name not in excluded_names:
+                        if not any(f.name == wk_folder.name for f in all_folders):
+                            all_folders.append(wk_folder)
+                            log(f"[MAIL CONNECTION] Added well-known folder: {wk_folder.name}")
+            except Exception as wk_error:
+                log(f"[MAIL CONNECTION] Warning: Could not access well-known folders: {wk_error}")
+            
+            log(f"[MAIL CONNECTION] Exchange folder search complete: {len(all_folders)} folders to search")
+            log(f"[MAIL CONNECTION] Folders include: {', '.join([f.name for f in all_folders[:10]])}{'...' if len(all_folders) > 10 else ''}")
+            
             return all_folders
             
         except Exception as e:
-            log(f"Błąd pobierania folderów: {str(e)}")
+            log(f"[MAIL CONNECTION] ERROR getting Exchange folders for search: {str(e)}")
             messagebox.showerror("Błąd folderów", f"Błąd pobierania listy folderów: {str(e)}")
             return []
     
