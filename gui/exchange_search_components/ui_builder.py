@@ -249,25 +249,25 @@ class MailSearchUI:
         system_folders = []
         custom_folders = []
         
-        # System folder patterns for detection
+        # System folder patterns for detection - using exact names that Exchange/IMAP use
         system_patterns = {
-            'inbox': {'keywords': ['inbox', 'odebrane', 'skrzynka odbiorcza'], 'icon': '📥', 'polish': 'Odebrane', 'order': 0},
-            'sent': {'keywords': ['sent', 'wysłane', 'sent items'], 'icon': '📤', 'polish': 'Wysłane', 'order': 1},
-            'drafts': {'keywords': ['draft', 'szkice', 'robocze'], 'icon': '📝', 'polish': 'Szkice', 'order': 2},
-            'spam': {'keywords': ['spam', 'junk', 'junk email'], 'icon': '⚠️', 'polish': 'Spam', 'order': 3},
-            'trash': {'keywords': ['trash', 'deleted', 'kosz', 'deleted items'], 'icon': '🗑️', 'polish': 'Kosz', 'order': 4},
-            'outbox': {'keywords': ['outbox', 'skrzynka nadawcza'], 'icon': '📮', 'polish': 'Skrzynka nadawcza', 'order': 5},
-            'archive': {'keywords': ['archive', 'archiwum'], 'icon': '📦', 'polish': 'Archiwum', 'order': 6}
+            'inbox': {'names': ['inbox', 'odebrane', 'skrzynka odbiorcza'], 'icon': '📥', 'polish': 'Odebrane', 'order': 0},
+            'sent': {'names': ['sent', 'wysłane', 'sent items', 'wysłane elementy'], 'icon': '📤', 'polish': 'Wysłane', 'order': 1},
+            'drafts': {'names': ['draft', 'drafts', 'szkice', 'robocze', 'wersje robocze'], 'icon': '📝', 'polish': 'Szkice', 'order': 2},
+            'spam': {'names': ['spam', 'junk', 'junk email', 'niechciana poczta'], 'icon': '⚠️', 'polish': 'Spam', 'order': 3},
+            'trash': {'names': ['trash', 'deleted', 'deleted items', 'kosz', 'elementy usunięte'], 'icon': '🗑️', 'polish': 'Kosz', 'order': 4},
+            'outbox': {'names': ['outbox', 'skrzynka nadawcza'], 'icon': '📮', 'polish': 'Skrzynka nadawcza', 'order': 5},
+            'archive': {'names': ['archive', 'archiwum'], 'icon': '📦', 'polish': 'Archiwum', 'order': 6}
         }
         
         # Categorize each folder
         for folder_name in folders:
-            folder_lower = folder_name.lower()
+            folder_lower = folder_name.lower().strip()
             is_system = False
             
-            # Check if folder matches any system pattern
+            # Check if folder matches any system pattern (exact match only for reliability)
             for folder_type, config in system_patterns.items():
-                if any(keyword in folder_lower for keyword in config['keywords']):
+                if folder_lower in config['names']:
                     # Get Polish display name
                     polish_name = FolderNameMapper.get_folder_display_name(folder_name, "exchange")
                     if polish_name == folder_name:  # If no translation, use configured Polish name
