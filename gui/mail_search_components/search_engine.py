@@ -395,7 +395,10 @@ class EmailSearchEngine:
                         if combined_query:
                             try:
                                 log(f"Próba zapytania z filtrami dla folderu '{folder_name}'")
-                                messages = search_folder.filter(combined_query).order_by('-datetime_received')
+                                messages = search_folder.filter(combined_query).only(
+                                    'subject', 'sender', 'datetime_received', 'is_read', 
+                                    'has_attachments', 'attachments', 'id'
+                                ).order_by('-datetime_received')
                                 messages_list = list(messages)
                                 query_success = True
                                 log(f"Zapytanie z filtrami: znaleziono {len(messages_list)} wiadomości")
@@ -404,7 +407,10 @@ class EmailSearchEngine:
                                 # Query failed, fallback to getting all messages and filtering manually
                                 try:
                                     log(f"Fallback: pobieranie wszystkich wiadomości z folderu '{folder_name}'")
-                                    messages = search_folder.all().order_by('-datetime_received')
+                                    messages = search_folder.all().only(
+                                        'subject', 'sender', 'datetime_received', 'is_read', 
+                                        'has_attachments', 'attachments', 'id'
+                                    ).order_by('-datetime_received')
                                     messages_list = list(messages)
                                     log(f"Fallback: pobrano {len(messages_list)} wszystkich wiadomości")
                                 except Exception as fallback_error:
@@ -412,7 +418,10 @@ class EmailSearchEngine:
                         else:
                             try:
                                 log(f"Pobieranie wszystkich wiadomości z folderu '{folder_name}' (brak filtrów)")
-                                messages = search_folder.all().order_by('-datetime_received')
+                                messages = search_folder.all().only(
+                                    'subject', 'sender', 'datetime_received', 'is_read', 
+                                    'has_attachments', 'attachments', 'id'
+                                ).order_by('-datetime_received')
                                 messages_list = list(messages)
                                 log(f"Pobrano {len(messages_list)} wszystkich wiadomości")
                             except Exception as all_error:
@@ -423,9 +432,15 @@ class EmailSearchEngine:
                             log(f"Brak wiadomości - próba alternatywnej metody konwersji")
                             try:
                                 if combined_query:
-                                    messages = search_folder.filter(combined_query)
+                                    messages = search_folder.filter(combined_query).only(
+                                        'subject', 'sender', 'datetime_received', 'is_read', 
+                                        'has_attachments', 'attachments', 'id'
+                                    )
                                 else:
-                                    messages = search_folder.all()
+                                    messages = search_folder.all().only(
+                                        'subject', 'sender', 'datetime_received', 'is_read', 
+                                        'has_attachments', 'attachments', 'id'
+                                    )
                                 
                                 # Use normal iteration instead of .iterator()
                                 messages_list = [msg for msg in messages][:per_page]  # Limit during iteration
@@ -913,6 +928,10 @@ class EmailSearchEngine:
         """Check if message has PDF attachments containing the search text"""
         if not message.attachments or not search_text:
             return {'found': False, 'matches': [], 'method': 'no_attachments_or_text'}
+        
+        # Log attachment count for debugging
+        attachment_count = len(message.attachments)
+        log(f"[PDF SEARCH] Sprawdzanie {attachment_count} załączników w wiadomości: {message.subject[:50] if message.subject else 'Bez tematu'}...")
         
         found_matches = []
         found_attachment_names = []
