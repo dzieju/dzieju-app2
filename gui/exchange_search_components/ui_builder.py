@@ -242,35 +242,129 @@ class MailSearchUI:
         if not is_visible:
             scroll_wrapper.grid_remove()
         
-        # Create checkboxes in multiple columns if there are many folders
-        max_columns = 3
-        folders_per_column = max(1, len(folders) // max_columns + (1 if len(folders) % max_columns else 0))
-        
         # Import FolderNameMapper for Polish translations
         from gui.exchange_search_components.mail_connection import FolderNameMapper
         
-        for i, folder_name in enumerate(folders):
-            var = tk.BooleanVar()
-            exclusion_vars[folder_name] = var
+        # Categorize folders into system and custom folders
+        system_folders = []
+        custom_folders = []
+        
+        # System folder patterns for detection - using exact names that Exchange/IMAP use
+        system_patterns = {
+            'inbox': {'names': ['inbox', 'odebrane', 'skrzynka odbiorcza'], 'icon': '📥', 'polish': 'Odebrane', 'order': 0},
+            'sent': {'names': ['sent', 'wysłane', 'sent items', 'wysłane elementy'], 'icon': '📤', 'polish': 'Wysłane', 'order': 1},
+            'drafts': {'names': ['draft', 'drafts', 'szkice', 'robocze', 'wersje robocze'], 'icon': '📝', 'polish': 'Szkice', 'order': 2},
+            'spam': {'names': ['spam', 'junk', 'junk email', 'niechciana poczta'], 'icon': '⚠️', 'polish': 'Spam', 'order': 3},
+            'trash': {'names': ['trash', 'deleted', 'deleted items', 'kosz', 'elementy usunięte'], 'icon': '🗑️', 'polish': 'Kosz', 'order': 4},
+            'outbox': {'names': ['outbox', 'skrzynka nadawcza'], 'icon': '📮', 'polish': 'Skrzynka nadawcza', 'order': 5},
+            'archive': {'names': ['archive', 'archiwum'], 'icon': '📦', 'polish': 'Archiwum', 'order': 6}
+        }
+        
+        # Categorize each folder
+        for folder_name in folders:
+            folder_lower = folder_name.lower().strip()
+            is_system = False
             
-            row = i % folders_per_column
-            column = i // folders_per_column
+            # Check if folder matches any system pattern (exact match only for reliability)
+            for folder_type, config in system_patterns.items():
+                if folder_lower in config['names']:
+                    # Get Polish display name
+                    polish_name = FolderNameMapper.get_folder_display_name(folder_name, "exchange")
+                    if polish_name == folder_name:  # If no translation, use configured Polish name
+                        polish_name = config['polish']
+                    
+                    system_folders.append({
+                        'name': folder_name,
+                        'display': f"{config['icon']} {polish_name}",
+                        'original': folder_name if polish_name.lower() != folder_name.lower() else None,
+                        'order': config['order']
+                    })
+                    is_system = True
+                    break
             
-            # Get Polish display name for the folder
-            display_name = FolderNameMapper.get_folder_display_name(folder_name, "exchange")
+            if not is_system:
+                # Custom folder - add folder icon
+                polish_name = FolderNameMapper.get_folder_display_name(folder_name, "exchange")
+                custom_folders.append({
+                    'name': folder_name,
+                    'display': f"📁 {polish_name}",
+                    'original': folder_name if polish_name.lower() != folder_name.lower() else None
+                })
+        
+        # Sort system folders by predefined order
+        system_folders.sort(key=lambda f: f['order'])
+        # Sort custom folders alphabetically
+        custom_folders.sort(key=lambda f: f['display'].lower())
+        
+        current_row = 0
+        max_columns = 3
+        
+        # Add system folders section if there are any
+        if system_folders:
+            # Section header for system folders
+            section_label = ttk.Label(checkboxes_frame, text="📌 Foldery systemowe:", 
+                                     font=("Arial", 9, "bold"), foreground="#2E5C8A")
+            section_label.grid(row=current_row, column=0, columnspan=max_columns, sticky="w", padx=5, pady=(5, 2))
+            current_row += 1
             
-            # If the display name is different from the original, show both
-            if display_name != folder_name and display_name.lower() != folder_name.lower():
-                checkbox_text = f"{display_name} ({folder_name})"
-            else:
-                checkbox_text = folder_name
+            # Add system folder checkboxes
+            for i, folder_info in enumerate(system_folders):
+                var = tk.BooleanVar()
+                exclusion_vars[folder_info['name']] = var
+                
+                row = current_row + (i % ((len(system_folders) + max_columns - 1) // max_columns))
+                column = i // ((len(system_folders) + max_columns - 1) // max_columns)
+                
+                # Create checkbox text with original name if different
+                if folder_info['original']:
+                    checkbox_text = f"{folder_info['display']} ({folder_info['original']})"
+                else:
+                    checkbox_text = folder_info['display']
+                
+                checkbox = ttk.Checkbutton(
+                    checkboxes_frame, 
+                    text=checkbox_text, 
+                    variable=var
+                )
+                checkbox.grid(row=row, column=column, sticky="w", padx=10, pady=1)
             
-            checkbox = ttk.Checkbutton(
-                checkboxes_frame, 
-                text=checkbox_text, 
-                variable=var
-            )
-            checkbox.grid(row=row, column=column, sticky="w", padx=5, pady=2)
+            # Update current row to after system folders
+            current_row += max(1, (len(system_folders) + max_columns - 1) // max_columns)
+            
+            # Add separator between sections
+            if custom_folders:
+                separator = ttk.Separator(checkboxes_frame, orient='horizontal')
+                separator.grid(row=current_row, column=0, columnspan=max_columns, sticky="ew", padx=5, pady=8)
+                current_row += 1
+        
+        # Add custom folders section if there are any
+        if custom_folders:
+            # Section header for custom folders
+            section_label = ttk.Label(checkboxes_frame, text="📂 Foldery własne:", 
+                                     font=("Arial", 9, "bold"), foreground="#2E5C8A")
+            section_label.grid(row=current_row, column=0, columnspan=max_columns, sticky="w", padx=5, pady=(5, 2))
+            current_row += 1
+            
+            # Add custom folder checkboxes
+            for i, folder_info in enumerate(custom_folders):
+                var = tk.BooleanVar()
+                exclusion_vars[folder_info['name']] = var
+                
+                row = current_row + (i % ((len(custom_folders) + max_columns - 1) // max_columns))
+                column = i // ((len(custom_folders) + max_columns - 1) // max_columns)
+                
+                # Create checkbox text with original name if different
+                if folder_info['original']:
+                    checkbox_text = f"{folder_info['display']} ({folder_info['original']})"
+                else:
+                    checkbox_text = folder_info['display']
+                
+                checkbox = ttk.Checkbutton(
+                    checkboxes_frame, 
+                    text=checkbox_text, 
+                    variable=var
+                )
+                checkbox.grid(row=row, column=column, sticky="w", padx=10, pady=1)
         
         # Configure grid weights for the checkboxes frame
         for col in range(max_columns):
