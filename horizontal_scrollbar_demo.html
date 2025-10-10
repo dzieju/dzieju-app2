@@ -1,0 +1,362 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Demonstracja: Poziomy scrollbar dla folderów Exchange</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1200px;
+            margin: 20px auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .demo-note {
+            background: #d4edda;
+            border: 1px solid #c3e6cb;
+            border-radius: 5px;
+            padding: 15px;
+            margin-bottom: 20px;
+            color: #155724;
+        }
+        .demo-note strong {
+            font-size: 18px;
+        }
+        .comparison {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin: 20px 0;
+        }
+        .panel {
+            background: white;
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .panel.before {
+            border-left: 5px solid #e74c3c;
+        }
+        .panel.after {
+            border-left: 5px solid #27ae60;
+        }
+        .panel h2 {
+            margin-top: 0;
+        }
+        .before h2 {
+            color: #e74c3c;
+        }
+        .after h2 {
+            color: #27ae60;
+        }
+        
+        .folder-section {
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            padding: 10px;
+            margin: 10px 0;
+            background-color: #fafafa;
+        }
+        
+        .folder-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+            font-weight: bold;
+        }
+        
+        .folder-list {
+            border: 1px solid #aaa;
+            padding: 10px;
+            background: white;
+            font-family: monospace;
+            font-size: 12px;
+        }
+        
+        .folder-list-before {
+            height: 200px;
+            overflow: hidden;
+            position: relative;
+        }
+        
+        .folder-list-before::after {
+            content: "⚠️ Nazwy są obcięte!";
+            position: absolute;
+            right: 10px;
+            top: 10px;
+            background: #ff9800;
+            color: white;
+            padding: 5px 10px;
+            border-radius: 3px;
+            font-size: 11px;
+        }
+        
+        .folder-list-after {
+            height: 200px;
+            overflow-x: auto;
+            overflow-y: auto;
+        }
+        
+        .folder-item {
+            padding: 3px;
+            white-space: nowrap;
+        }
+        
+        .folder-item input {
+            margin-right: 5px;
+        }
+        
+        .scrollbar-demo {
+            height: 10px;
+            background: #e0e0e0;
+            border-radius: 5px;
+            margin-top: 5px;
+            position: relative;
+        }
+        
+        .scrollbar-thumb {
+            height: 10px;
+            width: 30%;
+            background: #2196F3;
+            border-radius: 5px;
+            position: absolute;
+            cursor: pointer;
+        }
+        
+        .highlight {
+            background: #fff3cd;
+            padding: 2px 5px;
+            border-radius: 3px;
+        }
+        
+        .changes-list {
+            background: #f8f9fa;
+            border-left: 4px solid #2196F3;
+            padding: 15px;
+            margin: 20px 0;
+            border-radius: 5px;
+        }
+        
+        .changes-list h3 {
+            margin-top: 0;
+            color: #2196F3;
+        }
+        
+        .changes-list li {
+            margin: 8px 0;
+        }
+        
+        .code-block {
+            background: #2c3e50;
+            color: #ecf0f1;
+            padding: 15px;
+            border-radius: 5px;
+            font-family: monospace;
+            font-size: 12px;
+            overflow-x: auto;
+            margin: 15px 0;
+        }
+        
+        .benefits {
+            background: #e3f2fd;
+            border-left: 4px solid #2196F3;
+            padding: 15px;
+            margin: 20px 0;
+            border-radius: 5px;
+        }
+        
+        .benefits h3 {
+            margin-top: 0;
+            color: #1976d2;
+        }
+    </style>
+</head>
+<body>
+    <div class="demo-note">
+        <strong>📋 Ulepszenie: Poziomy scrollbar dla wykrywania folderów Exchange</strong><br>
+        Ta demonstracja pokazuje dodanie poziomego scrollbara do okna z wynikami wykrywania folderów Exchange,
+        aby umożliwić wygodne przewijanie i dostęp do wszystkich folderów, nawet gdy mają długie nazwy.
+    </div>
+
+    <div class="comparison">
+        <div class="panel before">
+            <h2>❌ Przed poprawką</h2>
+            <p><strong>Problem:</strong> Długie nazwy folderów są obcięte i trudno dostępne</p>
+            
+            <div class="folder-section">
+                <div class="folder-header">
+                    <span>Wyklucz te foldery:</span>
+                    <button>Ukryj</button>
+                </div>
+                <div class="folder-list folder-list-before">
+                    <div class="folder-item"><input type="checkbox"> ☑️ Sent Items</div>
+                    <div class="folder-item"><input type="checkbox"> ☑️ Deleted Items</div>
+                    <div class="folder-item"><input type="checkbox"> ☑️ Drafts</div>
+                    <div class="folder-item"><input type="checkbox"> ☑️ Inbox/Projects/2024/Q1/Client_A_Very_Long_...</div>
+                    <div class="folder-item"><input type="checkbox"> ☑️ Inbox/Projects/2024/Q1/Client_B_Another_L...</div>
+                    <div class="folder-item"><input type="checkbox"> ☑️ Inbox/Projects/2024/Q2/Marketing_Campaign...</div>
+                    <div class="folder-item"><input type="checkbox"> ☑️ Inbox/Archive/2023/January/Important_Docu...</div>
+                    <div class="folder-item"><input type="checkbox"> ☑️ Inbox/Clients/Company_XYZ_International_...</div>
+                </div>
+            </div>
+            
+            <p style="color: #e74c3c; font-weight: bold;">⚠️ Problemy:</p>
+            <ul style="color: #555;">
+                <li>Nazwy folderów są obcięte</li>
+                <li>Nie można zobaczyć pełnych ścieżek</li>
+                <li>Trudno rozpoznać foldery</li>
+                <li>Zła UX dla dużej liczby folderów</li>
+            </ul>
+        </div>
+
+        <div class="panel after">
+            <h2>✅ Po poprawce</h2>
+            <p><strong>Rozwiązanie:</strong> Dodano poziomy scrollbar do przewijania</p>
+            
+            <div class="folder-section">
+                <div class="folder-header">
+                    <span>Wyklucz te foldery:</span>
+                    <button>Ukryj</button>
+                </div>
+                <div class="folder-list folder-list-after">
+                    <div class="folder-item"><input type="checkbox"> ☑️ Sent Items</div>
+                    <div class="folder-item"><input type="checkbox"> ☑️ Deleted Items</div>
+                    <div class="folder-item"><input type="checkbox"> ☑️ Drafts</div>
+                    <div class="folder-item"><input type="checkbox"> ☑️ Inbox/Projects/2024/Q1/Client_A_Very_Long_Folder_Name</div>
+                    <div class="folder-item"><input type="checkbox"> ☑️ Inbox/Projects/2024/Q1/Client_B_Another_Long_Name</div>
+                    <div class="folder-item"><input type="checkbox"> ☑️ Inbox/Projects/2024/Q2/Marketing_Campaign_Spring_2024</div>
+                    <div class="folder-item"><input type="checkbox"> ☑️ Inbox/Archive/2023/January/Important_Documents</div>
+                    <div class="folder-item"><input type="checkbox"> ☑️ Inbox/Clients/Company_XYZ_International_Ltd</div>
+                </div>
+                <div class="scrollbar-demo">
+                    <div class="scrollbar-thumb"></div>
+                </div>
+            </div>
+            
+            <p style="color: #27ae60; font-weight: bold;">✅ Zalety:</p>
+            <ul style="color: #555;">
+                <li>Pełne nazwy folderów widoczne</li>
+                <li>Możliwość przewijania w poziomie</li>
+                <li>Łatwa identyfikacja folderów</li>
+                <li>Lepsza UX dla wielu folderów</li>
+            </ul>
+        </div>
+    </div>
+
+    <div class="changes-list">
+        <h3>🔧 Zmiany w kodzie</h3>
+        <p>Zmodyfikowano 3 pliki UI builder:</p>
+        <ul>
+            <li><code>gui/exchange_search_components/ui_builder.py</code></li>
+            <li><code>gui/imap_search_components/ui_builder.py</code></li>
+            <li><code>gui/mail_search_components/ui_builder.py</code></li>
+        </ul>
+        <p><strong>Główne zmiany:</strong></p>
+        <ul>
+            <li>Dodano <span class="highlight">Canvas</span> jako kontener dla checkboxów</li>
+            <li>Dodano <span class="highlight">poziomy scrollbar</span> (tk.HORIZONTAL)</li>
+            <li>Połączono Canvas z scrollbarem (xscrollcommand)</li>
+            <li>Checkboxy umieszczone w Frame wewnątrz Canvas</li>
+            <li>Automatyczna aktualizacja regionu przewijania</li>
+        </ul>
+    </div>
+
+    <div class="code-block">
+# Przed:
+checkboxes_frame = ttk.Frame(container_frame, relief="sunken", borderwidth=1)
+checkboxes_frame.grid(row=1, column=0, columnspan=5, padx=5, pady=5, sticky="ew")
+
+# Po:
+scroll_wrapper = ttk.Frame(container_frame)
+scroll_wrapper.grid(row=1, column=0, columnspan=5, padx=5, pady=5, sticky="ew")
+
+canvas = tk.Canvas(scroll_wrapper, height=200, relief="sunken", borderwidth=1)
+canvas.grid(row=0, column=0, sticky="ew")
+
+h_scrollbar = ttk.Scrollbar(scroll_wrapper, orient=tk.HORIZONTAL, command=canvas.xview)
+h_scrollbar.grid(row=1, column=0, sticky="ew")
+
+canvas.configure(xscrollcommand=h_scrollbar.set)
+
+checkboxes_frame = ttk.Frame(canvas)
+canvas_window = canvas.create_window((0, 0), window=checkboxes_frame, anchor="nw")
+
+# ... (tworzenie checkboxów) ...
+
+# Aktualizacja regionu przewijania
+checkboxes_frame.update_idletasks()
+canvas.configure(scrollregion=canvas.bbox("all"))
+    </div>
+
+    <div class="benefits">
+        <h3>🎯 Korzyści dla użytkownika</h3>
+        <ul>
+            <li><strong>Lepszy dostęp do folderów:</strong> Wszystkie foldery są widoczne i dostępne</li>
+            <li><strong>Wygodna obsługa:</strong> Możliwość przewijania w poziomie aby zobaczyć długie nazwy</li>
+            <li><strong>Lepsza orientacja:</strong> Pełne ścieżki folderów pomagają w identyfikacji</li>
+            <li><strong>Skalowalność:</strong> Działa dobrze z dowolną liczbą folderów</li>
+            <li><strong>Spójność:</strong> Podobne do innych elementów UI z scrollbarami (np. wyniki wyszukiwania)</li>
+        </ul>
+    </div>
+
+    <div class="changes-list" style="border-left-color: #28a745; margin-top: 30px;">
+        <h3 style="color: #28a745;">✅ Status implementacji</h3>
+        <ul>
+            <li>✅ <strong>Exchange:</strong> Dodano poziomy scrollbar w ui_builder.py</li>
+            <li>✅ <strong>IMAP:</strong> Dodano poziomy scrollbar w ui_builder.py (dla spójności)</li>
+            <li>✅ <strong>Mail Search:</strong> Dodano poziomy scrollbar w ui_builder.py (dla spójności)</li>
+            <li>✅ <strong>Kompatybilność:</strong> Zachowana zgodność z istniejącym kodem</li>
+            <li>✅ <strong>Funkcjonalność:</strong> Toggle (Ukryj/Pokaż) działa poprawnie</li>
+        </ul>
+    </div>
+
+    <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 20px; border-radius: 10px; text-align: center; margin-top: 30px;">
+        <h2 style="margin-top: 0;">🎉 Implementacja zakończona</h2>
+        <p>Poziomy scrollbar został pomyślnie dodany do okna wykrywania folderów Exchange.<br>
+        Użytkownicy mogą teraz wygodnie przeglądać całą listę folderów bez ograniczeń ekranu.</p>
+    </div>
+
+    <script>
+        // Make scrollbar interactive in demo
+        const scrollbarThumb = document.querySelector('.scrollbar-thumb');
+        const scrollbarDemo = document.querySelector('.scrollbar-demo');
+        const folderList = document.querySelector('.folder-list-after');
+        
+        let isDragging = false;
+        
+        scrollbarThumb.addEventListener('mousedown', (e) => {
+            isDragging = true;
+            e.preventDefault();
+        });
+        
+        document.addEventListener('mousemove', (e) => {
+            if (!isDragging) return;
+            
+            const rect = scrollbarDemo.getBoundingClientRect();
+            const x = e.clientX - rect.left;
+            const maxX = rect.width - scrollbarThumb.offsetWidth;
+            const newX = Math.max(0, Math.min(x, maxX));
+            
+            scrollbarThumb.style.left = newX + 'px';
+            
+            // Sync with folder list
+            const scrollPercent = newX / maxX;
+            const maxScroll = folderList.scrollWidth - folderList.clientWidth;
+            folderList.scrollLeft = scrollPercent * maxScroll;
+        });
+        
+        document.addEventListener('mouseup', () => {
+            isDragging = false;
+        });
+        
+        // Sync scrollbar with folder list scrolling
+        folderList.addEventListener('scroll', () => {
+            const scrollPercent = folderList.scrollLeft / (folderList.scrollWidth - folderList.clientWidth);
+            const maxX = scrollbarDemo.offsetWidth - scrollbarThumb.offsetWidth;
+            scrollbarThumb.style.left = (scrollPercent * maxX) + 'px';
+        });
+    </script>
+</body>
+</html>
